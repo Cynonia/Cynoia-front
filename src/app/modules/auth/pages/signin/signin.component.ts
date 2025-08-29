@@ -15,14 +15,14 @@ import {
     <div
     class="min-h-screen bg-gray-50 flex flex-col items-center  px-4 sm:px-6 lg:px-8"
     >
-    <div class="flex items-center justify-between w-full py-4">
+    <div class="flex items-center  justify-between w-full py-4">
     <img src="assets/images/logo.svg" class="self-start" alt="Logo" width="150" height="150">
     </div>
       <main
       class="h-full flex-1 flex flex-col items-center justify-center"
       >
         <div
-          class="relative max-w-md lg:max-w-lg  w-full bg-white p-10 rounded-lg animate-fade-in"
+          class="relative max-w-md lg:max-w-lg shadow-lg w-full bg-white p-10 rounded-lg animate-fade-in"
         >
           <div class="text-center">
             <h1 class="text-4xl font-semibold text-slate-800 mb-2">Se connecter</h1>

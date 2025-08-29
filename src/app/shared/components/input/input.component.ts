@@ -69,7 +69,7 @@ export class InputComponent implements ControlValueAccessor {
 
   get inputClasses(): string {
     const baseClasses =
-      'w-full py-3 bg-white/10 border border-gray-400 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200';
+      'w-full py-3 bg-white/10 border border-gray-400 rounded-lg text-gray-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200';
     const paddingClasses = this.icon ? 'pl-10' : 'pl-4';
     const rightPadding = this.showToggle ? 'pr-12' : 'pr-4';
     return `${baseClasses} ${paddingClasses} ${rightPadding}`;
