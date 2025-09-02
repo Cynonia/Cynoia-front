@@ -10,10 +10,10 @@ export const routes: Routes = [
         path: 'login',
         loadComponent: () => import('./modules/auth/pages/signin/signin.component').then(m => m.SigninComponent)
       },
-    //   {
-    //     path: 'signup',
-    //     loadComponent: () => import('./modules/auth/pages/signup/signup.component').then(m => m.SignupComponent)
-    //   },
+       {
+         path: 'signup',
+         loadComponent: () => import('./modules/auth/pages/signup/signup.component').then(m => m.SignupComponent)
+     },
     //   {
     //     path: 'forgot-password',
     //     loadComponent: () => import('./modules/auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
