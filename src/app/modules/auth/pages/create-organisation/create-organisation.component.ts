@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { AuthService } from '../../../../core/services';
 
 @Component({
   selector: 'app-create-organisation',
@@ -14,7 +15,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
       <header class="flex justify-between items-center px-6 py-4 border-b">
         <img src="assets/images/logo.svg" alt="Cynoia" class="h-8" />
         <button class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-          <img src="assets/images/avatar.png" alt="" class="w-8 h-8 rounded-full" />
+          <img src="/assets/images/Webinar-pana.png" alt="" class="w-8 h-8 rounded-full" />
           <span>Déconnexion</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -100,8 +101,9 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
 export class CreateOrganisationComponent {
   organisationForm: FormGroup;
   loading = false;
+  currentUser$ = this.authService.currentUser$;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,private authService: AuthService) {
     this.organisationForm = this.fb.group({
       name: ['', [Validators.required]],
       workspace: ['', [Validators.required, Validators.pattern('^[a-z0-9-]+$')]],

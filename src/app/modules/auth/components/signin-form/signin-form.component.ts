@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
-import { SignInCredentials } from '../../../../core/services/auth.service';
+import { AuthService, SignInCredentials } from '../../../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signin-form',
@@ -75,11 +76,10 @@ export class SigninFormComponent {
   signInForm: FormGroup;
   loading = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder,private authService: AuthService,private router: Router) {
     this.signInForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      remember: [false]
     });
   }
 
@@ -115,7 +115,17 @@ export class SigninFormComponent {
   onSubmit(): void {
     if (this.signInForm.valid) {
       this.loading = true;
-      this.formSubmit.emit(this.signInForm.value);
+      console.log(this.signInForm.value);
+      this.authService.signIn(this.signInForm.value).subscribe({
+      next: (response) => {
+        console.log("login réussie ✅", response);
+        this.loading = false;
+        this.router.navigate([""])
+      },
+      error: (err) => {
+        console.error("Erreur de la connexion ❌", err);
+        this.loading = false;
+      }})
     } else {
       this.markAllFieldsAsTouched();
     }
