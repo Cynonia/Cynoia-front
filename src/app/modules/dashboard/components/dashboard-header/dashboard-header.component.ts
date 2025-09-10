@@ -11,7 +11,6 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
     <header class="bg-white shadow-sm border-b border-slate-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
-          <!-- Logo -->
           <div class="flex items-center">
             <div class="flex-shrink-0">
               <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
@@ -25,9 +24,8 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
             </div>
           </div>
 
-          <!-- User Menu -->
           <div class="flex items-center space-x-4" *ngIf="currentUser$ | async as user">
-            <span class="text-sm text-slate-700">Welcome, {{ user.name }}!</span>
+            <span class="text-sm text-slate-700">Welcome, {{ user.firstName + " " +user.lastName }}!</span>
             <ui-button
               variant="outline"
               size="sm"

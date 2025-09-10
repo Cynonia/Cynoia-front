@@ -6,17 +6,18 @@ import {
   AuthService,
   SignInCredentials,
 } from '../../../../core/services/auth.service';
+import { AuthHeaderComponent } from '../../../../shared/components/ui/header/header.component';
 
 @Component({
   selector: 'app-signin',
   standalone: true,
-  imports: [CommonModule, SigninFormComponent],
+  imports: [CommonModule, SigninFormComponent , AuthHeaderComponent],
   template: `
     <div
     class="min-h-screen bg-gray-50 flex flex-col items-center  px-4 sm:px-6 lg:px-8"
     >
-    <div class="flex items-center  justify-between w-full py-4">
-    <img src="assets/images/logo.svg" class="self-start" alt="Logo" width="150" height="150">
+    <div class="flex items-start w-full">
+      <auth-header class="flex-1"/>
     </div>
       <main
       class="h-full flex-1 flex flex-col items-center justify-center"

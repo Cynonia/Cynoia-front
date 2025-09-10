@@ -4,33 +4,33 @@ import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
+import { registerDto } from '../../../types/registerDto';
 
 export interface SignInCredentials {
   email: string;
   password: string;
-  remember?: boolean;
 }
 
 export interface User {
-  id: string;
+  id: number;
+  firstName: string;
+  lastName: string;
+  login: string;
   email: string;
-  name: string;
-  avatar?: string;
   role: string;
-  tenantId: string;
-  permissions: string[];
-  preferences: Record<string, any>;
 }
 
 export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
-  expiresIn: number;
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+    token: string;
+  };
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private readonly API_URL = 'http://localhost:3000/api/v1/auth';
@@ -66,18 +66,27 @@ export class AuthService {
   }
 
   signIn(credentials: SignInCredentials): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials)
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/login`, credentials)
       .pipe(
-        tap(response => this.setAuthData(response, credentials.remember)),
-        catchError(error => throwError(() => error))
+        tap((response) => this.setAuthData(response)),
+        catchError((error) => throwError(() => error))
       );
   }
 
-  signUp(userData: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/register`, userData)
+  signUp(formValue: any): Observable<AuthResponse> {
+    const userData: registerDto = {
+      firstName: formValue.firstName,
+      lastName: formValue.lastName,
+      login: formValue.login,
+      email: formValue.email,
+      password: formValue.password,
+    };
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/register`, userData)
       .pipe(
-        tap(response => this.setAuthData(response)),
-        catchError(error => throwError(() => error))
+        tap((response) => this.setAuthData(response)),
+        catchError((error) => throwError(() => error))
       );
   }
 
@@ -85,7 +94,7 @@ export class AuthService {
     if (this.isBrowser) {
       this.http.post(`${this.API_URL}/signout`, {}).subscribe();
     }
-    
+
     this.clearAuthData();
     if (this.isBrowser) {
       this.router.navigate(['/auth/signin']);
@@ -93,17 +102,19 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    if (!this.isBrowser) return throwError(() => new Error('Not available on server'));
+    if (!this.isBrowser)
+      return throwError(() => new Error('Not available on server'));
 
     const refreshToken = localStorage.getItem('refreshToken');
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    return this.http.post<AuthResponse>(`${this.API_URL}/refresh`, { refreshToken })
+    return this.http
+      .post<AuthResponse>(`${this.API_URL}/refresh`, { refreshToken })
       .pipe(
-        tap(response => this.setAuthData(response, true)),
-        catchError(error => {
+        tap((response) => this.setAuthData(response, true)),
+        catchError((error) => {
           this.signOut();
           return throwError(() => error);
         })
@@ -111,18 +122,18 @@ export class AuthService {
   }
 
   private setAuthData(response: AuthResponse, remember = false): void {
-    const { user, token, refreshToken } = response;
+    const { data } = response;
 
-    this.currentUserSubject.next(user);
-    this.tokenSubject.next(token);
+    this.currentUserSubject.next(data.user);
+    this.tokenSubject.next(data.token);
     this.isAuthenticated$.next(true);
 
     if (!this.isBrowser) return; // Guard storage access
 
     const storage = remember ? localStorage : sessionStorage;
-    storage.setItem('token', token);
-    storage.setItem('user', JSON.stringify(user));
-    if (remember && refreshToken) localStorage.setItem('refreshToken', refreshToken);
+    storage.setItem('token', data.token);
+    storage.setItem('user', JSON.stringify(data.user));
+    // if (remember && refreshToken) localStorage.setItem('refreshToken', refreshToken);
   }
 
   private clearAuthData(): void {
@@ -142,8 +153,10 @@ export class AuthService {
   private initializeAuth(): void {
     if (!this.isBrowser) return; // Do nothing on server
 
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const token =
+      localStorage.getItem('token') || sessionStorage.getItem('token');
+    const userData =
+      localStorage.getItem('user') || sessionStorage.getItem('user');
 
     if (token && userData) {
       try {
