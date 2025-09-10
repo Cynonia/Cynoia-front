@@ -10,10 +10,10 @@ export const routes: Routes = [
         path: 'login',
         loadComponent: () => import('./modules/auth/pages/signin/signin.component').then(m => m.SigninComponent)
       },
-    //   {
-    //     path: 'signup',
-    //     loadComponent: () => import('./modules/auth/pages/signup/signup.component').then(m => m.SignupComponent)
-    //   },
+       {
+         path: 'signup',
+         loadComponent: () => import('./modules/auth/pages/signup/signup.component').then(m => m.SignupComponent)
+     },
     //   {
     //     path: 'forgot-password',
     //     loadComponent: () => import('./modules/auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
@@ -24,6 +24,21 @@ export const routes: Routes = [
     path: '',
     canActivate: [AuthGuard],
     loadComponent: () => import('./modules/dashboard/pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+  },
+    {
+    path: 'auth/create-organisation',
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/welcome/welcome.component')
+          .then(m => m.WelcomeComponent)
+      },
+      {
+        path: 'new',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/create-organisation.component')
+          .then(m => m.CreateOrganisationComponent)
+      }
+    ]
   },
 //   {
 //     path: 'bookings',

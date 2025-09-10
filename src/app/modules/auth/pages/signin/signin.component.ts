@@ -44,7 +44,7 @@ import {
               <p class="text-slate-800">
                 Nouveau sur notre plateforme ?
                 <a
-                  href="/auth/signup"
+                  href="/auth/signup/"
                   class="text-purple-800 hover:text-purple-400 font-medium transition-colors"
                 >
                   Cree un compte
