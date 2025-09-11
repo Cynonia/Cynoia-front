@@ -29,6 +29,15 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
       ></ui-input>
 
       <ui-input
+        label="Numéro de téléphone"
+        type="tel"
+        placeholder="Entrez votre numéro de téléphone"
+        formControlName="phone"
+        [error]="getFieldError('phone')"
+        [touched]="isFieldTouched('phone')"
+      ></ui-input>
+
+      <ui-input
         label="Mot de passe"
         type="password"
         placeholder="Entrez votre mot de passe"
@@ -83,6 +92,7 @@ export class SignupFormComponent {
     this.signupForm = this.fb.group({
       fullName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
+      phone: ['', [Validators.required, Validators.pattern('^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$')]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
@@ -104,6 +114,7 @@ export class SignupFormComponent {
       if (control.errors['required']) return 'Ce champ est requis';
       if (control.errors['email']) return 'Email invalide';
       if (control.errors['minlength']) return 'Le mot de passe doit contenir au moins 8 caractères';
+      if (control.errors['pattern'] && fieldName === 'phone') return 'Numéro de téléphone invalide';
       if (control.errors['passwordMismatch']) return 'Les mots de passe ne correspondent pas';
     }
     return '';

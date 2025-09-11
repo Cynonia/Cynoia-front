@@ -74,6 +74,26 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
             [touched]="isFieldTouched('website')"
           ></ui-input>
 
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ui-input
+              label="Email de l'espace (optionnel)"
+              type="email"
+              placeholder="contact@monespace.cynoia.app"
+              formControlName="spaceEmail"
+              [error]="getFieldError('spaceEmail')"
+              [touched]="isFieldTouched('spaceEmail')"
+            ></ui-input>
+
+            <ui-input
+              label="Téléphone de l'espace (optionnel)"
+              type="tel"
+              placeholder="+221 77 123 45 67"
+              formControlName="spacePhone"
+              [error]="getFieldError('spacePhone')"
+              [touched]="isFieldTouched('spacePhone')"
+            ></ui-input>
+          </div>
+
           <div class="flex gap-4 pt-6">
             <button
               type="button"
