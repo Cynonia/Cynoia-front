@@ -68,11 +68,12 @@ export class InputComponent implements ControlValueAccessor {
   onTouched = () => {};
 
   get inputClasses(): string {
+    const p = this.type == "color" ? "p-0 !w-12 h-12" : "py-3"
     const baseClasses =
-      'w-full py-3 bg-white/10 border border-gray-400 rounded-lg text-gray-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200';
-    const paddingClasses = this.icon ? 'pl-10' : 'pl-4';
-    const rightPadding = this.showToggle ? 'pr-12' : 'pr-4';
-    return `${baseClasses} ${paddingClasses} ${rightPadding}`;
+      ' w-full bg-white/10 border border-gray-400 rounded-lg text-gray-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 ';
+    const paddingClasses = this.icon ? 'pl-10' : this.type == "color" ?'p-1 cursor-pointer' :'pl-4';
+    const rightPadding = this.showToggle ? 'pr-12' : this.type == "color" ?'p-1 cursor-pointer' :'pr-4';
+    return `${baseClasses} ${paddingClasses} ${rightPadding} ${p}`;
   }
 
   writeValue(value: string): void {
