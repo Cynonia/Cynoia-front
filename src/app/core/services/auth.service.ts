@@ -97,7 +97,7 @@ export class AuthService {
 
     this.clearAuthData();
     if (this.isBrowser) {
-      this.router.navigate(['/auth/signin']);
+      this.router.navigate(['/auth/login']);
     }
   }
 
