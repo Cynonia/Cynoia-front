@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 // Update the path below to the correct relative path where store.service.ts exists
@@ -21,7 +21,21 @@ import { StoreService } from '../../../../../../core/services/store.service';
           </div>
 
           <div class="mt-8">
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+            <!-- Affiche l'aperçu si un logo est sélectionné -->
+            <div *ngIf="logoPreviewUrl" class="text-center">
+              <p class="text-sm font-medium text-gray-700 mb-3">Aperçu du logo :</p>
+              <div class="relative inline-block p-4 border border-gray-200 rounded-lg">
+                <img [src]="logoPreviewUrl" alt="Aperçu du logo" class="max-h-32 mx-auto">
+                <button (click)="removeLogo()" class="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow border">
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Affiche la zone d'upload si aucun logo n'est sélectionné -->
+            <div *ngIf="!logoPreviewUrl" 
+                 class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-purple-500 transition-colors"
+                 (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
               <p class="mb-2 text-gray-500">Glissez votre logo ici ou</p>
               <input type="file" #fileInput class="hidden" accept="image/png, image/jpeg, image/svg+xml" (change)="onFileSelected($event)">
               <button type="button" (click)="fileInput.click()" class="font-medium text-purple-600 hover:text-purple-500">Parcourir les fichiers</button>
@@ -38,18 +52,63 @@ import { StoreService } from '../../../../../../core/services/store.service';
     </div>
   `
 })
-export class BrandingLogoComponent {
+export class BrandingLogoComponent implements OnInit {
+  logoPreviewUrl: string | null = null;
+  private selectedLogoData: string | null = null;
+
   constructor(private store: StoreService, private router: Router) {}
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => this.store.saveBrandingLogo(e.target.result);
-      reader.readAsDataURL(file);
+  ngOnInit() {
+    // Pré-remplir si un logo existe déjà dans le store
+    const currentLogo = this.store.getCurrentState()?.organization?.branding?.logo;
+    if (currentLogo) {
+      this.logoPreviewUrl = currentLogo;
+      this.selectedLogoData = currentLogo;
     }
   }
 
-  skipStep() { this.nextStep(); }
-  nextStep() { this.router.navigate(['/auth/create-organisation/branding/colors']); }
+  onDragOver(event: DragEvent) { event.preventDefault(); }
+  onDragLeave(event: DragEvent) { event.preventDefault(); }
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    const file = event.dataTransfer?.files[0];
+    if (file) this.handleFile(file);
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) this.handleFile(file);
+  }
+
+  private handleFile(file: File) {
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Le fichier est trop volumineux (max 2MB).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.selectedLogoData = e.target.result;
+      this.logoPreviewUrl = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeLogo() {
+    this.logoPreviewUrl = null;
+    this.selectedLogoData = null;
+    // Optionnel: vider aussi le store immédiatement
+    // this.store.saveBrandingLogo(''); 
+  }
+
+  skipStep() {
+    this.store.saveBrandingLogo(''); // S'assurer qu'aucun logo n'est sauvegardé
+    this.router.navigate(['/auth/create-organisation/branding/colors']);
+  }
+
+  nextStep() {
+    if (this.selectedLogoData) {
+      this.store.saveBrandingLogo(this.selectedLogoData);
+    }
+    this.router.navigate(['/auth/create-organisation/branding/colors']);
+  }
 }

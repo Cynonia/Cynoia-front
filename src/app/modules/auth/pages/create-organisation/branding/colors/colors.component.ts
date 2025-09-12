@@ -37,9 +37,15 @@ import { Subscription } from 'rxjs';
               <h3 class="text-lg font-medium text-gray-800 mb-3">Couleurs personnalisées</h3>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div *ngFor="let color of ['primary', 'secondary', 'accent']">
-                  <label class="capitalize text-sm font-medium text-gray-700">{{ color }}</label>
+                  <div class="flex justify-between items-center">
+                    <label class="capitalize text-sm font-medium text-gray-700">{{ color }}</label>
+                    <span class="text-sm text-gray-500 font-mono">{{ customColorsForm.get(color)?.value }}</span>
+                  </div>
                   <div class="flex items-center gap-3 mt-1">
+                    <!-- Input #1 -->
                     <input type="color" [formControlName]="color" class="w-10 h-10 p-0 border-none rounded-md cursor-pointer">
+                    
+                    <!-- Input #2 -->
                     <input type="text" [formControlName]="color" class="w-full px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-purple-500 focus:border-purple-500">
                   </div>
                 </div>
