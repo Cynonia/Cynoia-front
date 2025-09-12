@@ -37,6 +37,21 @@ export const routes: Routes = [
         path: 'new',
         loadComponent: () => import('./modules/auth/pages/create-organisation/create-organisation.component')
           .then(m => m.CreateOrganisationComponent)
+      },
+      {
+        path: 'branding/logo',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/logo/logo.component')
+          .then(m => m.BrandingLogoComponent)
+      },
+      {
+        path: 'branding/colors',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/colors/colors.component')
+          .then(m => m.BrandingColorsComponent)
+      },
+      {
+        path: 'branding/preview',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/preview/preview.component')
+          .then(m => m.BrandingPreviewComponent)
       }
     ]
   },

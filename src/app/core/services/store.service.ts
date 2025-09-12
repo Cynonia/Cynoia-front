@@ -73,6 +73,34 @@ export class StoreService {
     this.state.next(newState);
   }
 
+  saveBrandingLogo(logo: string) {
+    const currentState = this.state.value;
+    const newState = {
+      ...currentState,
+      organization: {
+        ...currentState.organization,
+        branding: { ...currentState.organization?.branding, logo }
+      },
+      onboardingStep: 'branding-colors'
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    this.state.next(newState);
+  }
+
+  saveBrandingColors(colors: { primary: string; secondary: string; accent: string; }) {
+    const currentState = this.state.value;
+    const newState = {
+      ...currentState,
+      organization: {
+        ...currentState.organization,
+        branding: { ...currentState.organization?.branding, colors }
+      },
+      onboardingStep: 'branding-preview'
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    this.state.next(newState);
+  }
+
   getState() {
     return this.state.asObservable();
   }
