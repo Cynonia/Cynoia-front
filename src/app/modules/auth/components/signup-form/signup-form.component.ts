@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { StoreService } from '../../../../core/services/store.service';
 
 @Component({
   selector: 'app-signup-form',
@@ -88,11 +90,15 @@ export class SignupFormComponent {
   signupForm: FormGroup;
   loading = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder, 
+    private store: StoreService,
+    private router: Router  // Ajouter le Router
+  ) {
     this.signupForm = this.fb.group({
       fullName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern('^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$')]],
+      phone: ['', [Validators.required, Validators.pattern('^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$')]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
@@ -127,9 +133,29 @@ export class SignupFormComponent {
   onSubmit() {
     if (this.signupForm.valid) {
       this.loading = true;
-      // Add your signup logic here
-      console.log(this.signupForm.value);
+      try {
+        // Enregistrer les données dans le store
+        const userData = {
+          fullName: this.signupForm.value.fullName,
+          email: this.signupForm.value.email,
+          phone: this.signupForm.value.phone
+        };
+
+        this.store.saveSignupData(userData);
+        console.log('Données sauvegardées:', userData);
+
+        this.signupForm.reset();
+        
+        
+        // Rediriger vers la page de création d'organisation
+        this.router.navigate(['/auth/create-organisation']);
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde:', error);
+      } finally {
+        this.loading = false;
+      }
     } else {
+      // Marquer tous les champs comme touchés pour afficher les erreurs
       Object.keys(this.signupForm.controls).forEach(key => {
         const control = this.signupForm.get(key);
         if (control?.invalid) {

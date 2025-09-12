@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
+import { StoreService } from '../../../../core/services/store.service'; // Chemin corrigé
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-organisation',
@@ -33,15 +35,15 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
               <div class="w-8 h-8 rounded-full bg-red-400"></div>
             </div>
           </div>
-          <h1 class="text-2xl font-bold text-gray-900">Meet Your Organization!</h1>
-          <p class="mt-2 text-gray-600">Your team's home base in Cynoia Where you'll get work done together.</p>
+          <h1 class="text-2xl font-bold text-gray-900">Ton espace prend vit ici !</h1>
+          <p class="mt-2 text-gray-600">Créées et gères une communauté de co-worker qui te ressemble</p>
         </div>
 
         <form [formGroup]="organisationForm" (ngSubmit)="onSubmit()" class="space-y-6 bg-white rounded-lg shadow-sm p-8">
           <ui-input
             label="Nom de l'organisation"
             type="text"
-            placeholder="Edacy Team 18"
+            placeholder="Mon Espace"
             formControlName="name"
             [error]="getFieldError('name')"
             [touched]="isFieldTouched('name')"
@@ -57,10 +59,10 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
                 type="text"
                 formControlName="workspace"
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-purple-500 focus:border-purple-500"
-                placeholder="edacy-team-18"
+                placeholder="mon-espace"
               />
               <span class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-gray-50">
-                .cynoia.app
+                .cynoia.space
               </span>
             </div>
           </div>
@@ -87,7 +89,7 @@ import { ButtonComponent } from '../../../../shared/components/button/button.com
             <ui-input
               label="Téléphone de l'espace (optionnel)"
               type="tel"
-              placeholder="+221 77 123 45 67"
+              placeholder="+221 33 000 00 01"
               formControlName="spacePhone"
               [error]="getFieldError('spacePhone')"
               [touched]="isFieldTouched('spacePhone')"
@@ -121,7 +123,7 @@ export class CreateOrganisationComponent {
   organisationForm: FormGroup;
   loading = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private store: StoreService, private router: Router) {
     this.organisationForm = this.fb.group({
       name: ['', [Validators.required]],
       workspace: ['', [Validators.required, Validators.pattern('^[a-z0-9-]+$')]],
@@ -147,9 +149,8 @@ export class CreateOrganisationComponent {
 
   onSubmit() {
     if (this.organisationForm.valid) {
-      this.loading = true;
-      console.log(this.organisationForm.value);
-      // Add your API call here
+      this.store.saveOrganizationData(this.organisationForm.value);
+      this.router.navigate(['/auth/create-organisation/branding/logo']);
     }
   }
 
