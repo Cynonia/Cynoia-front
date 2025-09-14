@@ -119,8 +119,8 @@ export const routes: Routes = [
 //     canActivate: [AuthGuard],
 //     loadChildren: () => import('./modules/analytics/analytics.routes').then(m => m.analyticsRoutes)
 //   },
-  // {
-  //   path: '**',
-  //   redirectTo: '/dashboard'
-  // }
+  {
+    path: '**',
+    redirectTo: '/dashboard'
+  }
 ];
