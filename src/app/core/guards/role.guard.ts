@@ -30,9 +30,9 @@ export class RoleGuard implements CanActivate {
         }
 
         // Check permissions
-        // if (requiredPermissions && !this.hasPermissions(user.permissions, requiredPermissions)) {
-        //   return this.router.createUrlTree(['/dashboard']);
-        // }
+          // if (requiredPermissions && !this.hasPermissions(user.permissions, requiredPermissions)) {
+          //   return this.router.createUrlTree(['/dashboard']);
+          // }
 
         return true;
       })
