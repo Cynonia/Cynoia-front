@@ -4,5 +4,6 @@ export * from './branding.service';
 export * from './spaces.service';
 export * from './reservations.service';
 export * from './members.service';
+export * from './calendar.service';
 // export * from './toast.service';
 // export * from './socket.service';

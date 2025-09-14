@@ -277,7 +277,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
                 type="submit"
                 [disabled]="isInviting"
                 class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
-                {{ isInviting ? 'Envoi...' : 'Envoyer l\'invitation' }}
+                {{ isInviting ? 'Envoi...' : "Envoyer l'invitation" }}
               </button>
             </div>
           </form>

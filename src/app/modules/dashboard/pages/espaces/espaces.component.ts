@@ -156,7 +156,7 @@ import { SpacesService, Space, SpaceFilter } from '../../../../core/services/spa
         <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
           <div class="flex items-center justify-between p-6 border-b">
             <h2 class="text-xl font-semibold text-gray-900">
-              {{ editingSpace ? 'Modifier l\'espace' : 'Ajouter un nouvel espace' }}
+              {{ editingSpace ? "Modifier l'espace" : "Ajouter un nouvel espace" }}
             </h2>
             <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
