@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
 import { registerDto } from '../../../types/registerDto';
+import { environment } from '../../../environments/environment';
 
 export interface SignInCredentials {
   email: string;
@@ -33,7 +34,7 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3000/api/v1/auth';
+  private readonly API_URL = environment.apiUrl + "auth" || 'http://localhost:3000/api/v1/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 

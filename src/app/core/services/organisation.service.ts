@@ -4,12 +4,13 @@ import { organisationDto } from '../../../types/organisationDto';
 import { AuthService } from './auth.service';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { BackendResponse } from '../../../types/backendResponse';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrganisationService {
-  private readonly apiBaseUrl = 'http://localhost:3000/api/v1/';
+  private readonly apiBaseUrl = environment.apiUrl || 'http://localhost:3000/api/v1/';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
