@@ -21,9 +21,48 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'dashboard',
+    //canActivate: [AuthGuard],
+    loadComponent: () => import('./modules/dashboard/layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./modules/dashboard/pages/dashboard-home/dashboard-home.component').then(m => m.DashboardHomeComponent)
+      },
+      {
+        path: 'espaces',
+        loadComponent: () => import('./modules/dashboard/pages/espaces/espaces.component').then(m => m.EspacesComponent)
+      },
+      {
+        path: 'reservations',
+        loadComponent: () => import('./modules/dashboard/pages/reservations/reservations.component').then(m => m.ReservationsComponent)
+      },
+      {
+        path: 'calendrier',
+        loadComponent: () => import('./modules/dashboard/pages/calendrier/calendrier.component').then(m => m.CalendrierComponent)
+      },
+      {
+        path: 'membres',
+        loadComponent: () => import('./modules/dashboard/pages/membres/membres.component').then(m => m.MembresComponent)
+      },
+      {
+        path: 'finances',
+        loadComponent: () => import('./modules/dashboard/pages/finances/finances.component').then(m => m.FinancesComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./modules/dashboard/pages/messages/messages.component').then(m => m.MessagesComponent)
+      },
+      {
+        path: 'parametres',
+        loadComponent: () => import('./modules/dashboard/pages/parametres/parametres.component').then(m => m.ParametresComponent)
+      }
+    ]
+  },
+  {
     path: '',
-    canActivate: [AuthGuard],
-    loadComponent: () => import('./modules/dashboard/pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
   },
     {
     path: 'auth/create-organisation',
@@ -37,6 +76,21 @@ export const routes: Routes = [
         path: 'new',
         loadComponent: () => import('./modules/auth/pages/create-organisation/create-organisation.component')
           .then(m => m.CreateOrganisationComponent)
+      },
+      {
+        path: 'branding/logo',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/logo/logo.component')
+          .then(m => m.BrandingLogoComponent)
+      },
+      {
+        path: 'branding/colors',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/colors/colors.component')
+          .then(m => m.BrandingColorsComponent)
+      },
+      {
+        path: 'branding/preview',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/preview/preview.component')
+          .then(m => m.BrandingPreviewComponent)
       }
     ]
   },

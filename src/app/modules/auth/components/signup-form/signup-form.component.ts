@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { AuthService } from '../../../../core/services';
@@ -16,12 +17,14 @@ export class SignupFormComponent {
   signupForm: FormGroup;
   loading = false;
 
+
   constructor(private fb: FormBuilder,private authService : AuthService,private router : Router) {
     this.signupForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       login: ['',[Validators.required]],
       email: ['', [Validators.required, Validators.email]],
+      phone: ['', [Validators.required, Validators.pattern('^[+]?[(]?[0-9]{3}[)]?[-\\s.]?[0-9]{3}[-\\s.]?[0-9]{4,6}$')]],
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', [Validators.required]],
       acceptTerms: [false, [Validators.requiredTrue]]
@@ -73,6 +76,7 @@ export class SignupFormComponent {
       }
     });
     } else {
+      // Marquer tous les champs comme touchés pour afficher les erreurs
       Object.keys(this.signupForm.controls).forEach(key => {
         const control = this.signupForm.get(key);
         if (control?.invalid) {

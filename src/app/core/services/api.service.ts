@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry } from 'rxjs/operators';
+import { catchError, retry, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { StoreService } from './store.service';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -19,7 +20,8 @@ export class ApiService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private store: StoreService
   ) {}
 
   private getHeaders(): HttpHeaders {
@@ -94,6 +96,13 @@ export class ApiService {
     );
   }
 
+  submitOnboarding() {
+    const payload = this.store.prepareApiPayload();
+    return this.post('/onboarding', payload).pipe(
+      tap(response => this.store.handleApiSuccess(response))
+    );
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('API Error:', error);
     
@@ -114,3 +123,4 @@ export class ApiService {
     }));
   }
 }
+

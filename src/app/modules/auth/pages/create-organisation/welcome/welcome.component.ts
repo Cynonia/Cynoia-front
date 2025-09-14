@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../../core/services';
@@ -47,6 +47,7 @@ import { AuthService } from '../../../../../core/services';
           />
         </div>
 
+
         <h1 class="text-3xl font-bold text-gray-900 mb-4" *ngIf="currentUser$ | async as user">Bienvenue {{user.firstName + " " + user.lastName}}!</h1>
 
         <p class="text-gray-600 mb-8 text-lg">
@@ -63,6 +64,7 @@ import { AuthService } from '../../../../../core/services';
     </div>
   `,
 })
+
 export class WelcomeComponent {
   currentUser$ = this.authService.currentUser$;
   constructor(private router: Router, private authService: AuthService) {}

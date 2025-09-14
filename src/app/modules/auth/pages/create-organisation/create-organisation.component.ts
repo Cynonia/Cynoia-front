@@ -48,6 +48,7 @@ import { Router } from '@angular/router';
             </p>
           </div>
 
+
           <!-- Form -->
           <form
             [formGroup]="organisationForm"
@@ -89,7 +90,6 @@ import { Router } from '@angular/router';
                 [touched]="isFieldTouched('logo')"
               ></ui-input>
             </div>
-
             <!-- Branding -->
             <div class="space-y-4">
               <label class="block text-gray-700 font-medium"
@@ -133,6 +133,7 @@ export class CreateOrganisationComponent {
   organisationForm: FormGroup;
   loading = false;
   currentUser$ = this.authService.currentUser$;
+
 
   constructor(
     private fb: FormBuilder,
