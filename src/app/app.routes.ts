@@ -22,7 +22,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    //canActivate: [AuthGuard],
+    canActivate: [AuthGuard],
     loadComponent: () => import('./modules/dashboard/layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
     children: [
       {
@@ -59,11 +59,11 @@ export const routes: Routes = [
       }
     ]
   },
-  {
-    path: '',
-    redirectTo: '/dashboard',
-    pathMatch: 'full'
-  },
+  // {
+  //   path: '',
+  //   redirectTo: '/dashboard',
+  //   pathMatch: 'full'
+  // },
     {
     path: 'auth/create-organisation',
     children: [
@@ -119,8 +119,8 @@ export const routes: Routes = [
 //     canActivate: [AuthGuard],
 //     loadChildren: () => import('./modules/analytics/analytics.routes').then(m => m.analyticsRoutes)
 //   },
-  {
-    path: '**',
-    redirectTo: '/dashboard'
-  }
+  // {
+  //   path: '**',
+  //   redirectTo: '/dashboard'
+  // }
 ];

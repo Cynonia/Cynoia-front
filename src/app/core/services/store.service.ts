@@ -109,5 +109,14 @@ export class StoreService {
     return this.state.value;
   }
 
+  handleApiSuccess(respinse: any){
+    console.log("api success");
+    
+  }
+
+  prepareApiPayload(){
+    return  {}
+  }
+
   // ... autres méthodes du service ...
 }

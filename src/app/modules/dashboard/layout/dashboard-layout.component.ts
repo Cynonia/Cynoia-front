@@ -185,7 +185,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     const currentUser = this.authService.currentUser;
-    this.userName = currentUser?.name || 'Utilisateur';
+    this.userName = currentUser?.firstName + ' ' + currentUser?.lastName || 'Utilisateur';
     this.userInitials = this.getInitials(this.userName);
 
     // Initialiser les informations de l'organisation depuis le service de branding

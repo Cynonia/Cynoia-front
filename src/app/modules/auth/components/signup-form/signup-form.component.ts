@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { AuthService } from '../../../../core/services';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signup-form',
