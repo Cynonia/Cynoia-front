@@ -37,7 +37,7 @@ export class ButtonComponent {
     const variantClasses = {
       primary: 'text-white bg-purple-600 hover:from-purple-700 hover:to-blue-700 focus:ring-purple-500 shadow-lg',
       secondary: 'border border-white/20 shadow-sm bg-white/10 text-slate-200 hover:bg-white/20 focus:ring-purple-500',
-      outline: 'border border-white/20 text-slate-200 hover:bg-white/10 focus:ring-purple-500'
+      outline: 'border border-gray/20 text-slate-800 hover:bg-white/10 focus:ring-transparent'
     };
 
     const sizeClasses = {

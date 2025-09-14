@@ -1,0 +1,102 @@
+<form
+  [formGroup]="signupForm"
+  (ngSubmit)="onSubmit()"
+  class="flex flex-col gap-2 bg-white p-6 rounded-2xl"
+>
+  <!-- Identité -->
+  <div class="grid grid-cols-2 gap-4">
+    <ui-input
+      type="text"
+      placeholder="Entrez votre prénom"
+      formControlName="firstName"
+      [error]="getFieldError('firstName')"
+      [touched]="isFieldTouched('firstName')"
+    ></ui-input>
+
+    <ui-input
+      type="text"
+      placeholder="Entrez votre nom"
+      formControlName="lastName"
+      [error]="getFieldError('lastName')"
+      [touched]="isFieldTouched('lastName')"
+    ></ui-input>
+  </div>
+
+  <!-- Identifiants -->
+  <ui-input
+    type="text"
+    placeholder="Choisissez un login"
+    formControlName="login"
+    [error]="getFieldError('login')"
+    [touched]="isFieldTouched('login')"
+  />
+
+  <ui-input
+    type="email"
+    placeholder="Entrez votre e-mail"
+    formControlName="email"
+    [error]="getFieldError('email')"
+    [touched]="isFieldTouched('email')"
+  ></ui-input>
+
+  <!-- Sécurité -->
+  <div class="grid grid-cols-2 gap-4">
+    <ui-input
+      type="password"
+      placeholder="Entrez votre mot de passe"
+      formControlName="password"
+      [error]="getFieldError('password')"
+      [touched]="isFieldTouched('password')"
+      [showToggle]="true"
+    ></ui-input>
+
+    <ui-input
+      type="password"
+      placeholder="Saisissez à nouveau votre mot de passe"
+      formControlName="confirmPassword"
+      [error]="getFieldError('confirmPassword')"
+      [touched]="isFieldTouched('confirmPassword')"
+      [showToggle]="true"
+    ></ui-input>
+    </div>
+    
+  <!-- Terms -->
+  <div class="flex items-start space-x-2 mt-4">
+    <input
+      type="checkbox"
+      id="terms"
+      formControlName="acceptTerms"
+      class="mt-1 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+    />
+    <label for="terms" class="text-sm text-gray-600 leading-snug">
+      J'ai lu et j'accepte la
+      <a href="/privacy" class="text-purple-600 hover:underline"
+        >politique de confidentialité</a
+      >
+      et les
+      <a href="/terms" class="text-purple-600 hover:underline"
+        >conditions de service</a
+      >.
+    </label>
+  </div>
+
+  <!-- CTA -->
+  <ui-button
+    type="submit"
+    variant="primary"
+    [fullWidth]="true"
+    [loading]="loading"
+    [disabled]="signupForm.invalid"
+    class="mt-6"
+  >
+  <span *ngIf="!loading">S'inscrire →</span>
+  <span *ngIf="loading">Inscription en cours...</span>
+  <!-- @if(!loading){
+      <span>S'inscrire →</span>
+
+  }@else{
+
+      <span >Inscription en cours...</span>
+  } -->
+  </ui-button>
+</form>

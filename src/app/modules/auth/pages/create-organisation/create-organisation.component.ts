@@ -1,9 +1,15 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { InputComponent } from '../../../../shared/components/input/input.component';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
-import { StoreService } from '../../../../core/services/store.service'; // Chemin corrigé
+import { AuthService } from '../../../../core/services';
+import { OrganisationService } from '../../../../core/services/organisation.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -11,123 +17,136 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, InputComponent, ButtonComponent],
   template: `
-    <div class="min-h-screen bg-white">
+    <div class="min-h-screen bg-gray-50 flex flex-col">
       <!-- Header -->
-      <header class="flex justify-between items-center px-6 py-4 border-b">
+      <header
+        class="flex justify-between items-center px-6 py-4 bg-white shadow-md"
+      >
         <img src="assets/images/logo.svg" alt="Cynoia" class="h-8" />
-        <button class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-          <img src="assets/images/avatar.png" alt="" class="w-8 h-8 rounded-full" />
+        <button
+          class="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+        >
+          <img
+            src="/assets/images/Webinar-pana.png"
+            alt=""
+            class="w-8 h-8 rounded-full"
+          />
           <span>Déconnexion</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
         </button>
       </header>
 
-      <!-- Main Content -->
-      <main class="max-w-2xl mx-auto px-4 py-12">
-        <div class="text-center mb-8">
-          <div class="flex justify-center mb-4">
-            <div class="flex -space-x-2">
-              <div class="w-8 h-8 rounded-full bg-orange-400"></div>
-              <div class="w-8 h-8 rounded-full bg-green-400"></div>
-              <div class="w-8 h-8 rounded-full bg-blue-400"></div>
-              <div class="w-8 h-8 rounded-full bg-red-400"></div>
-            </div>
+      <!-- Main -->
+      <main class="flex-grow flex justify-center items-start py-12 px-4">
+        <div class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
+          <!-- Title -->
+          <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">
+              Créer votre organisation
+            </h1>
+            <p class="text-gray-600 mt-2">
+              Votre espace pour gérer votre équipe et vos projets.
+            </p>
           </div>
-          <h1 class="text-2xl font-bold text-gray-900">Ton espace prend vit ici !</h1>
-          <p class="mt-2 text-gray-600">Créées et gères une communauté de co-worker qui te ressemble</p>
-        </div>
 
-        <form [formGroup]="organisationForm" (ngSubmit)="onSubmit()" class="space-y-6 bg-white rounded-lg shadow-sm p-8">
-          <ui-input
-            label="Nom de l'organisation"
-            type="text"
-            placeholder="Mon Espace"
-            formControlName="name"
-            [error]="getFieldError('name')"
-            [touched]="isFieldTouched('name')"
-            required
-          ></ui-input>
 
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-700">
-              URL de l'espace de travail <span class="text-red-500">*</span>
-            </label>
-            <div class="flex">
-              <input
+          <!-- Form -->
+          <form
+            [formGroup]="organisationForm"
+            (ngSubmit)="onSubmit()"
+            class="space-y-6"
+          >
+            <!-- Organisation Identity -->
+            <div class="space-y-4">
+              <label class="block text-gray-700 font-medium"
+                >Nom de l'entreprise <span class="text-red-500">*</span></label
+              >
+              <ui-input
                 type="text"
-                formControlName="workspace"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-purple-500 focus:border-purple-500"
-                placeholder="mon-espace"
-              />
-              <span class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg bg-gray-50">
-                .cynoia.space
-              </span>
+                placeholder="Ex: Bakemono"
+                formControlName="name"
+                [error]="getFieldError('name')"
+                [touched]="isFieldTouched('name')"
+              ></ui-input>
+
+              <label class="block text-gray-700 font-medium"
+                >Domaine <span class="text-red-500">*</span></label
+              >
+              <ui-input
+                type="text"
+                placeholder="Ex: bakemono.com"
+                formControlName="domaine"
+                [error]="getFieldError('domaine')"
+                [touched]="isFieldTouched('domaine')"
+              ></ui-input>
+
+              <label class="block text-gray-700 font-medium"
+                >Logo de l'entreprise</label
+              >
+              <ui-input
+                type="url"
+                placeholder="URL du logo"
+                formControlName="logo"
+                [error]="getFieldError('logo')"
+                [touched]="isFieldTouched('logo')"
+              ></ui-input>
             </div>
-          </div>
+            <!-- Branding -->
+            <div class="space-y-4">
+              <label class="block text-gray-700 font-medium"
+                >Couleur principale</label
+              >
+              <ui-input type="color" formControlName="couleur"></ui-input>
 
-          <ui-input
-            label="Site Web ou LinkedIn de l'entreprise"
-            type="url"
-            placeholder="https://cynoia.com ou linkedin.com/company/cynoia"
-            formControlName="website"
-            [error]="getFieldError('website')"
-            [touched]="isFieldTouched('website')"
-          ></ui-input>
+              <label class="block text-gray-700 font-medium">Avatar</label>
+              <ui-input
+                type="url"
+                placeholder="URL de l'avatar"
+                formControlName="avatar"
+                [error]="getFieldError('avatar')"
+                [touched]="isFieldTouched('avatar')"
+              ></ui-input>
+            </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ui-input
-              label="Email de l'espace (optionnel)"
-              type="email"
-              placeholder="contact@monespace.cynoia.app"
-              formControlName="spaceEmail"
-              [error]="getFieldError('spaceEmail')"
-              [touched]="isFieldTouched('spaceEmail')"
-            ></ui-input>
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+              <ui-button variant="outline" [fullWidth]="true">
+                Annuler
+              </ui-button>
 
-            <ui-input
-              label="Téléphone de l'espace (optionnel)"
-              type="tel"
-              placeholder="+221 33 000 00 01"
-              formControlName="spacePhone"
-              [error]="getFieldError('spacePhone')"
-              [touched]="isFieldTouched('spacePhone')"
-            ></ui-input>
-          </div>
-
-          <div class="flex gap-4 pt-6">
-            <button
-              type="button"
-              (click)="onCancel()"
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              Annuler
-            </button>
-            <ui-button
-              type="submit"
-              variant="primary"
-              [fullWidth]="true"
-              [loading]="loading"
-              [disabled]="organisationForm.invalid"
-            >
-              Commencez maintenant!
-            </ui-button>
-          </div>
-        </form>
+              <ui-button
+                type="submit"
+                variant="primary"
+                [fullWidth]="true"
+                [loading]="loading"
+                [disabled]="organisationForm.invalid"
+              >
+                Commencer maintenant
+              </ui-button>
+            </div>
+          </form>
+        </div>
       </main>
     </div>
-  `
+  `,
 })
 export class CreateOrganisationComponent {
   organisationForm: FormGroup;
   loading = false;
+  currentUser$ = this.authService.currentUser$;
 
-  constructor(private fb: FormBuilder, private store: StoreService, private router: Router) {
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private organisationService: OrganisationService,
+    private router : Router
+  ) {
     this.organisationForm = this.fb.group({
       name: ['', [Validators.required]],
-      workspace: ['', [Validators.required, Validators.pattern('^[a-z0-9-]+$')]],
-      website: ['', [Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]]
+      logo: ['', [Validators.required]],
+      couleur: ['', [Validators.required]],
+      avatar: ['', [Validators.required]],
+      domaine: ['', [Validators.required]],
     });
   }
 
@@ -135,10 +154,6 @@ export class CreateOrganisationComponent {
     const control = this.organisationForm.get(fieldName);
     if (control?.errors && control.touched) {
       if (control.errors['required']) return 'Ce champ est requis';
-      if (control.errors['pattern']) {
-        if (fieldName === 'workspace') return 'Utilisez uniquement des lettres minuscules, chiffres et tirets';
-        if (fieldName === 'website') return 'URL invalide';
-      }
     }
     return '';
   }
@@ -149,8 +164,30 @@ export class CreateOrganisationComponent {
 
   onSubmit() {
     if (this.organisationForm.valid) {
-      this.store.saveOrganizationData(this.organisationForm.value);
-      this.router.navigate(['/auth/create-organisation/branding/logo']);
+      this.loading = true;
+      console.log(this.organisationForm.value);
+      const formData = {
+        name: this.organisationForm.get('name')?.value,
+        logo: this.organisationForm.get('logo')?.value,
+        couleur: this.organisationForm.get('couleur')?.value,
+        avatar: this.organisationForm.get('avatar')?.value,
+        domaine: this.organisationForm.get('domaine')?.value,
+      };
+      this.organisationService.createOrganisation(formData)
+      .subscribe({
+      next: (response) => {
+        console.log("Inscription réussie ✅", response);
+        this.loading = false;
+
+        this.router.navigate([""])
+      },
+      error: (err) => {
+        console.error("Erreur d'inscription ❌", err);
+        this.loading = false;
+      }
+    });
+
+      // Add your API call here
     }
   }
 
