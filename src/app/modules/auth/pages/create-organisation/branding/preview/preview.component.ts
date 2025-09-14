@@ -57,6 +57,6 @@ export class BrandingPreviewComponent implements OnInit {
 
   ngOnInit() { this.state$ = this.store.getState(); }
   previousStep() { this.router.navigate(['/auth/create-organisation/branding/colors']); }
-  applyBranding() { this.router.navigate(['/dashboard']); }
-  finishLater() { this.router.navigate(['/dashboard']); }
+  applyBranding() { this.router.navigate(['/']); }
+  finishLater() { this.router.navigate(['/']); }
 }

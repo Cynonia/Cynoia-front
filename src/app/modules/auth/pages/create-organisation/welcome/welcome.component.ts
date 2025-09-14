@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-welcome',
@@ -32,7 +33,7 @@ import { Router } from '@angular/router';
         </div>
 
         <h1 class="text-3xl font-bold text-gray-900 mb-4">
-          Bienvenue !
+          Bienvenue {{ userName ? userName + ' !' : '!' }}
         </h1>
 
         <p class="text-gray-600 mb-8 text-lg">
@@ -49,8 +50,18 @@ import { Router } from '@angular/router';
     </div>
   `
 })
-export class WelcomeComponent {
-  constructor(private router: Router) {}
+export class WelcomeComponent implements OnInit {
+  userName: string = '';
+
+  constructor(
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit(): void {
+    const currentUser = this.authService.currentUser;
+    this.userName = currentUser?.name || '';
+  }
 
   createOrganization() {
     this.router.navigate(['/auth/create-organisation/new']);
