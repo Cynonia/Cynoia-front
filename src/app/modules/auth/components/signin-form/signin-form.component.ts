@@ -120,7 +120,7 @@ export class SigninFormComponent {
       next: (response) => {
         console.log("login réussie ✅", response);
         this.loading = false;
-        this.router.navigate([""])
+        this.router.navigate(["/dashboard"])
       },
       error: (err) => {
         console.error("Erreur de la connexion ❌", err);
