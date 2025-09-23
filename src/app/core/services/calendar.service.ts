@@ -144,8 +144,8 @@ export class CalendarService {
     const endDate = new Date(reservation.date);
     
     // Parse des heures (format "HH:MM")
-    const [startHour, startMinute] = reservation.startTime.split(':').map(Number);
-    const [endHour, endMinute] = reservation.endTime.split(':').map(Number);
+    const [startHour, startMinute] = reservation.startAt.split(':').map(Number);
+    const [endHour, endMinute] = reservation.endAt.split(':').map(Number);
     
     startDate.setHours(startHour, startMinute, 0, 0);
     endDate.setHours(endHour, endMinute, 0, 0);
