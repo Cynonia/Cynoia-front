@@ -138,7 +138,7 @@ import { SpacesService } from '../../../../core/services/spaces.service';
                   {{ reservation.espace.name }}
                 </h4>
                 <div class="flex items-center text-sm text-gray-500 mt-1">
-                  <span>{{ reservation.member?.name || 'Membre inconnu' }}</span>
+                  <span>{{ (reservation.user?.firstName + " " + reservation.user?.lastName ) || 'Membre inconnu' }}</span>
                   <span class="mx-2">•</span>
                   <span>{{ formatDate(reservation.startAt) }}</span>
                   <span class="mx-2">•</span>
