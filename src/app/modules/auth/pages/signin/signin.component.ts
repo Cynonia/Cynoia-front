@@ -95,7 +95,9 @@ export class SigninComponent implements OnInit {
 
   handleSignIn(credentials: SignInCredentials): void {
     this.authService.signIn(credentials).subscribe({
-      next: () => {
+      next: (data) => {
+        console.log(data);
+        
         this.signinFormComponent.setLoading(false);
         this.router.navigate(['/dashboard']);
       },

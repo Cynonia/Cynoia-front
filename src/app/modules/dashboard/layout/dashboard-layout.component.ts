@@ -1,23 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { BrandingService, BrandingConfig } from '../../../core/services/branding.service';
+import { BrandingService, Organization } from '../../../core/services/branding.service';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink],
   template: `
     <div class="min-h-screen bg-gray-50">
       <!-- Sidebar -->
       <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-        <!-- Logo et nom de l'espace -->
         <div class="flex items-center gap-3 px-6 py-4 border-b">
-          <div class="w-8 h-8 rounded flex items-center justify-center" 
-               [style.background-color]="branding.primaryColor">
-            <span class="text-white text-sm font-bold">{{ spaceInitials }}</span>
-          </div>
+          <ng-container *ngIf="branding?.logo; else noLogo">
+            <img [src]="branding?.logo" [alt]="branding?.name" class="w-32 h-12 " />
+          </ng-container>
+          <ng-template #noLogo>
+            <div class="w-8 h-8 rounded flex items-center justify-center"
+                 [style.backgroundColor]="branding?.primaryColor || '#6B46C1'">
+              <span class="text-white text-sm font-bold">{{ spaceInitials }}</span>
+            </div>
+          </ng-template>
           <div>
             <h2 class="font-semibold text-gray-900">{{ spaceName }}</h2>
             <p class="text-xs text-gray-500">{{ spaceDescription }}</p>
@@ -25,133 +29,123 @@ import { BrandingService, BrandingConfig } from '../../../core/services/branding
         </div>
 
         <!-- Navigation -->
-        <nav class="mt-6">
-          <div class="px-3">
-            <a routerLink="/dashboard" 
-               routerLinkActive="border-r-2"
-               [routerLinkActiveOptions]="{exact: true}"
-               [style.border-color]="branding.primaryColor"
-               [style.color]="branding.primaryColor"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1 router-link-active:bg-purple-50"
-               [class.bg-purple-50]="true"
-               [class.text-purple-700]="true">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-              </svg>
-              Dashboard
-            </a>
+        <nav class="mt-6 px-3">
+          <a routerLink="/dashboard"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+            </svg>
+            Dashboard
+          </a>
 
-            <a routerLink="/dashboard/espaces" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm2 0v12h8V4H6z"/>
-              </svg>
-              Espaces
-            </a>
+          <a routerLink="/dashboard/espaces"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/espaces') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4zm2 0v12h8V4H6z"/>
+            </svg>
+            Espaces
+          </a>
 
-            <a routerLink="/dashboard/reservations" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1 relative">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
-              </svg>
-              Réservations
-              <span class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {{ pendingReservations }}
-              </span>
-            </a>
+          <a routerLink="/dashboard/reservations"
+             class="nav-link relative"
+             [ngStyle]="isActive('/dashboard/reservations') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
+            </svg>
+            Réservations
+            <span class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              1
+            </span>
+          </a>
 
-            <a routerLink="/dashboard/calendrier" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
-              </svg>
-              Calendrier
-            </a>
+          <a routerLink="/dashboard/calendrier"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/calendrier') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Calendrier
+          </a>
 
-            <a routerLink="/dashboard/membres" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-              </svg>
-              Membres
-            </a>
+          <a routerLink="/dashboard/membres"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/membres') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M13 7a3 3 0 11-6 0 3 3 0 016 0zM4 15a4 4 0 018 0v1H4v-1zM14 15h2a2 2 0 012 2v1H12v-1a2 2 0 012-2z"/>
+            </svg>
+            Membres
+          </a>
 
-            <a routerLink="/dashboard/finances" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"/>
-              </svg>
-              Finances
-            </a>
+          <a routerLink="/dashboard/finances"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/finances') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3"/>
+              <path d="M12 14v4m0-12v2m-7 4h14"/>
+            </svg>
+            Finances
+          </a>
 
-            <a routerLink="/dashboard/messages" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
-                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
-              </svg>
-              Messages
-            </a>
+          <a routerLink="/dashboard/messages"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/messages') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 11.5a8.38 8.38 0 01-2.14 5.65"/>
+              <path d="M3 21v-6a9 9 0 0118 0v6"/>
+              <path d="M7 10h10M7 14h7"/>
+            </svg>
+            Messages
+          </a>
 
-            <a routerLink="/dashboard/parametres" 
-               routerLinkActive="bg-purple-50 text-purple-700 border-r-2 border-purple-700"
-               class="flex items-center gap-3 px-3 py-2 text-gray-600 rounded-lg hover:bg-gray-50 mb-1">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"/>
-              </svg>
-              Paramètres
-            </a>
-          </div>
+          <a routerLink="/dashboard/parametres"
+             class="nav-link"
+             [ngStyle]="isActive('/dashboard/parametres') ? getActiveStyle() : {}">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M11 4a1 1 0 10-2 0v1H7a1 1 0 000 2h2v1H7a1 1 0 000 2h2v1H7a1 1 0 000 2h2v1a1 1 0 102 0v-1h2a1 1 0 100-2h-2v-1h2a1 1 0 100-2h-2V7h2a1 1 0 100-2h-2V4z" clip-rule="evenodd"/>
+            </svg>
+            Paramètres
+          </a>
         </nav>
       </div>
 
       <!-- Main Content -->
       <div class="ml-64">
         <!-- Top Header -->
-        <header class="bg-white shadow-sm border-b px-6 py-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <h1 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h1>
-              <p class="text-gray-600 text-sm">{{ pageDescription }}</p>
-            </div>
-            
-            <!-- User Menu -->
-            <div class="flex items-center gap-4">
-              <button class="p-2 text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"/>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
-                </svg>
-              </button>
-              
-              <div class="flex items-center gap-3">
-                <span class="text-sm font-medium text-gray-700">{{ userName }}</span>
-                <button (click)="toggleUserMenu()" class="flex items-center gap-2 p-1 rounded-full hover:bg-gray-50">
-                  <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <span class="text-sm font-medium text-gray-600">{{ userInitials }}</span>
-                  </div>
-                  <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-                  </svg>
-                </button>
-              </div>
+        <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h1>
+            <p class="text-gray-600 text-sm">{{ pageDescription }}</p>
+          </div>
 
-              <!-- User Dropdown -->
-              <div *ngIf="showUserMenu" class="absolute right-6 top-16 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil</a>
-                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Paramètres</a>
-                <hr class="my-1">
-                <button (click)="logout()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                  Déconnexion
-                </button>
+          <div class="flex items-center gap-4 relative">
+            <button class="p-2 text-gray-400 hover:text-gray-600" aria-label="Notifications">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/>
+              </svg>
+            </button>
+
+            <div class="flex items-center gap-3 cursor-pointer" (click)="toggleUserMenu()">
+              <span class="text-sm font-medium text-gray-700">{{ userName }}</span>
+              <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-semibold">
+                {{ userInitials }}
               </div>
+              <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+              </svg>
+            </div>
+
+            <div *ngIf="showUserMenu"
+                 class="absolute right-0 mt-12 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil</a>
+              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Paramètres</a>
+              <hr class="my-1">
+              <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Déconnexion</button>
             </div>
           </div>
         </header>
@@ -162,43 +156,67 @@ import { BrandingService, BrandingConfig } from '../../../core/services/branding
         </main>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      color: #4B5563;
+      border-radius: 0.5rem;
+      margin-bottom: 0.25rem;
+      transition: all 0.2s ease;
+      border-right: 2px solid transparent;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  `]
 })
 export class DashboardLayoutComponent implements OnInit {
-  userName: string = '';
-  userInitials: string = '';
-  spaceName: string = '';
-  spaceDescription: string = '';
-  spaceInitials: string = '';
-  pageTitle: string = 'Dashboard';
-  pageDescription: string = 'Vue d\'ensemble de votre espace de coworking';
-  pendingReservations: number = 1;
-  showUserMenu: boolean = false;
-  branding: BrandingConfig;
+  userName = '';
+  userInitials = '';
+  spaceName = '';
+  spaceDescription = '';
+  spaceInitials = '';
+  pageTitle = 'Dashboard';
+  pageDescription = 'Vue d\'ensemble de votre espace de coworking';
+  showUserMenu = false;
+  branding: Organization | null = null;
+  primaryColor = '#6B46C1'; // Couleur par défaut si pas définie
 
   constructor(
     private authService: AuthService,
-    private brandingService: BrandingService
-  ) {
-    this.branding = this.brandingService.getCurrentBranding();
-  }
+    private brandingService: BrandingService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
+    this.branding = this.brandingService.currentOrganization;
+    if (this.branding?.primaryColor) {
+      this.primaryColor = this.branding.primaryColor;
+    }
+
     const currentUser = this.authService.currentUser;
-    this.userName = currentUser?.firstName + ' ' + currentUser?.lastName || 'Utilisateur';
+    this.userName = currentUser?.firstName && currentUser?.lastName
+      ? `${currentUser.firstName} ${currentUser.lastName}`
+      : 'Utilisateur';
     this.userInitials = this.getInitials(this.userName);
 
-    // Initialiser les informations de l'organisation depuis le service de branding
-    const organization = this.brandingService.currentOrganization;
-    if (organization) {
-      this.spaceName = organization.name;
-      this.spaceDescription = organization.description;
-      this.spaceInitials = this.branding.initials;
+    if (this.branding) {
+      this.spaceName = this.branding.name;
+      this.spaceDescription = this.branding.description;
+      this.spaceInitials = this.getInitials(this.branding.name);
     }
   }
 
-  private getInitials(name: string): string {
-    return name.split(' ').map(word => word.charAt(0)).join('').toUpperCase().slice(0, 2);
+  getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   }
 
   toggleUserMenu(): void {
@@ -207,5 +225,28 @@ export class DashboardLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.signOut();
+  }
+
+  isActive(path: string): boolean {
+    // Pour faire match partiel on peut utiliser startsWith ou includes
+    return this.router.url === path;
+  }
+
+  getActiveStyle(): { [key: string]: string } {
+    return {
+      color: this.primaryColor,
+      backgroundColor: this.hexWithOpacity(this.primaryColor, 0.1),
+      borderRight: `2px solid ${this.primaryColor}`,
+      fontWeight: '600'
+    };
+  }
+
+  private hexWithOpacity(hex: string, opacity: number): string {
+    const cleanedHex = hex.replace('#', '');
+    const bigint = parseInt(cleanedHex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
   }
 }

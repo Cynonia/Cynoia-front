@@ -13,6 +13,7 @@ import { AuthService } from '../../../../../core/services';
       <header class="flex justify-between items-center px-6 py-4 border-b">
         <img src="assets/images/logo.svg" alt="Cynoia" class="h-8" />
         <button
+        (click)="logout()"
           class="flex items-center gap-2 text-gray-600 hover:text-gray-800"
         >
           <img
@@ -70,5 +71,11 @@ export class WelcomeComponent {
   constructor(private router: Router, private authService: AuthService) {}
   createOrganization() {
     this.router.navigate(['/auth/create-organisation/new']);
+  }
+
+  logout(): void {
+    this.authService.signOut();
+    console.log("deconn");
+    
   }
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { AuthService, User } from './auth.service'; // 👈 Assure-toi que le chemin est correct
 
 export interface Organization {
   id: string;
@@ -25,27 +26,33 @@ export class BrandingService {
   private currentOrganizationSubject = new BehaviorSubject<Organization | null>(null);
   public currentOrganization$ = this.currentOrganizationSubject.asObservable();
 
+  private currentUser: User | null = null;
+
   // Branding par défaut de Cynoia
   private defaultBranding: BrandingConfig = {
     logo: 'assets/images/logo.svg',
-    primaryColor: '#7C3AED', // Purple-600
-    secondaryColor: '#A855F7', // Purple-500
+    primaryColor: '#7C3AED',
+    secondaryColor: '#A855F7',
     name: 'Cynoia',
     initials: 'CY'
   };
 
-  constructor() {
-    this.initializeOrganization();
+  constructor(private authService: AuthService) {
+    // 🔁 S'abonner à l'utilisateur connecté
+    this.authService.currentUser$.subscribe((user) => {
+      this.currentUser = user;
+      this.initializeOrganization(); // 🔁 Réinitialise le branding si l'utilisateur change
+    });
   }
 
   private initializeOrganization(): void {
-    // Simulation d'une organisation sans branding personnalisé
     const mockOrganization: Organization = {
       id: '1',
-      name: 'Team 18',
+      name: this.currentUser?.entity.name || 'Team 18', // 👈 Utilisation du nom de l'utilisateur connecté
       description: 'Propriétaire',
-      primaryColor: this.defaultBranding.primaryColor,
-      hasCustomBranding: false
+      primaryColor: this.currentUser?.entity.couleur ?? this.defaultBranding.primaryColor,
+      logo: this.currentUser?.entity.logo ?? "",
+      hasCustomBranding: false,
     };
 
     this.currentOrganizationSubject.next(mockOrganization);
@@ -53,9 +60,8 @@ export class BrandingService {
 
   getCurrentBranding(): BrandingConfig {
     const organization = this.currentOrganizationSubject.value;
-    
+
     if (!organization || !organization.hasCustomBranding) {
-      // Utiliser le branding par défaut de Cynoia avec le nom de l'organisation
       return {
         ...this.defaultBranding,
         name: organization?.name || 'Team 18',
@@ -63,7 +69,6 @@ export class BrandingService {
       };
     }
 
-    // Si l'organisation a un branding personnalisé
     return {
       logo: organization.logo || this.defaultBranding.logo,
       primaryColor: organization.primaryColor,
@@ -96,7 +101,6 @@ export class BrandingService {
     return this.currentOrganizationSubject.value;
   }
 
-  // Méthodes utilitaires pour le CSS
   getCSSVariables(): string {
     const branding = this.getCurrentBranding();
     return `

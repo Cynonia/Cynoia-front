@@ -19,6 +19,14 @@ export interface User {
   login: string;
   email: string;
   role: string;
+  entity: {
+    id: number;
+    name: string;
+    logo: string;
+    couleur: string;
+    avatar: string;
+    domaine: string;
+  };
 }
 
 export interface AuthResponse {
@@ -34,7 +42,8 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL = environment.apiUrl + "auth" || 'http://localhost:3000/api/v1/auth';
+  private readonly API_URL =
+    environment.apiUrl + 'auth' || 'http://localhost:3000/api/v1/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 
