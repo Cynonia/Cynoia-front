@@ -126,21 +126,21 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    <span>Membre : {{ reservation.member.name }}</span>
+                    <span>Membre : {{ reservation.user?.firstName + " "+ reservation.user?.lastName }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.date) }}</span>
+                    <span>{{ formatDate(reservation.startAt) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau : {{ formatTime(reservation.startTime, reservation.endTime) }}</span>
+                    <span>Créneau :  {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
                   </div>
                 </div>
               </div>
@@ -175,8 +175,8 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       <ng-container *ngIf="reservation.space?.image; else defaultIcon2">
-                        <img [src]="reservation.space?.image!" 
-                             [alt]="reservation.space?.name || 'Espace'"
+                        <img [src]="reservation.espace?.images" 
+                             [alt]="reservation.espace?.name || 'Espace'"
                              class="w-full h-full object-cover">
                       </ng-container>
                       <ng-template #defaultIcon2>
@@ -188,7 +188,7 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                       </ng-template>
                     </div>
                     <div>
-                      <h3 class="font-semibold text-gray-900">{{ reservation.space?.name || 'Espace inconnu' }}</h3>
+                      <h3 class="font-semibold text-gray-900">{{ reservation.espace?.name || 'Espace inconnu' }}</h3>
                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         Confirmé
                       </span>
@@ -201,21 +201,21 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    <span>Membre : {{ reservation.member.name }}</span>
+                    <span>Membre : {{ reservation.user?.firstName + " "+ reservation.user?.lastName }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.date) }}</span>
+                    <span>{{ formatDate(reservation.startAt) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau : {{ formatTime(reservation.startTime, reservation.endTime) }}</span>
+                    <span>Créneau :  {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
                   </div>
                 </div>
               </div>
@@ -276,21 +276,21 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
-                    <span>Membre : {{ reservation.member.name }}</span>
+                    <span>Membre : {{ reservation.user?.firstName + " " + reservation.user?.lastName }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.date) }}</span>
+                    <span>{{ formatDate(reservation.startAt) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau : {{ formatTime(reservation.startTime, reservation.endTime) }}</span>
+                    <span>Créneau : {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
                   </div>
                 </div>
               </div>
@@ -336,12 +336,12 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
 })
 export class ReservationsComponent implements OnInit {
   activeTab: 'en-attente' | 'confirmees' | 'rejetees' = 'en-attente';
-  
+
   allReservations: Reservation[] = [];
   pendingReservations: Reservation[] = [];
   confirmedReservations: Reservation[] = [];
   rejectedReservations: Reservation[] = [];
-  
+
   stats: ReservationStats = {
     total: 0,
     enAttente: 0,
@@ -362,37 +362,26 @@ export class ReservationsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadReservations();
-    this.subscribeToReservations();
-  }
-
-  private subscribeToReservations(): void {
-    this.reservationsService.reservations$.subscribe(reservations => {
+    this.reservationsService.getReservations().subscribe(reservations => {
       this.allReservations = reservations;
-      this.filterReservations();
-      this.updateStats();
+
+      this.pendingReservations = reservations.filter(r => r.status === 'en-attente');
+      this.confirmedReservations = reservations.filter(r => r.status === 'confirmee');
+      this.rejectedReservations = reservations.filter(r => r.status === 'rejetee');
+
+      this.stats = {
+        total: reservations.length,
+        enAttente: this.pendingReservations.length,
+        confirmees: this.confirmedReservations.length,
+        rejetees: this.rejectedReservations.length,
+        annulees: reservations.filter(r => r.status === 'annulee').length
+      };
+
       this.updateTabCounts();
     });
   }
 
-  private loadReservations(): void {
-    this.allReservations = this.reservationsService.getAllReservations();
-    this.filterReservations();
-    this.updateStats();
-    this.updateTabCounts();
-  }
-
-  private filterReservations(): void {
-    this.pendingReservations = this.reservationsService.getReservationsByStatus('en-attente');
-    this.confirmedReservations = this.reservationsService.getReservationsByStatus('confirmee');
-    this.rejectedReservations = this.reservationsService.getReservationsByStatus('rejetee');
-  }
-
-  private updateStats(): void {
-    this.stats = this.reservationsService.getReservationStats();
-  }
-
-  private updateTabCounts(): void {
+  updateTabCounts(): void {
     this.tabs[0].count = this.stats.enAttente;
     this.tabs[1].count = this.stats.confirmees;
     this.tabs[2].count = this.stats.rejetees;
@@ -426,28 +415,31 @@ export class ReservationsComponent implements OnInit {
   acceptReservation(reservation: Reservation): void {
     if (confirm(`Confirmer la réservation de ${reservation.member.name} pour ${reservation.space?.name} ?`)) {
       const result = this.reservationsService.acceptReservation(reservation.id);
-      if (result) {
-        // La liste se met à jour automatiquement via l'observable
-      }
     }
   }
 
   rejectReservation(reservation: Reservation): void {
     const reason = prompt('Raison du rejet (optionnel):');
-    if (reason !== null) { // L'utilisateur n'a pas annulé
+    if (reason !== null) {
       const result = this.reservationsService.rejectReservation(reservation.id, reason || undefined);
-      if (result) {
-        // La liste se met à jour automatiquement via l'observable
-      }
     }
   }
 
-  formatDate(date: Date): string {
-    return this.reservationsService.formatDate(date);
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
   }
 
-  formatTime(startTime: string, endTime: string): string {
-    return this.reservationsService.formatTime(startTime, endTime);
+  formatTime(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   navigateToCalendar(): void {

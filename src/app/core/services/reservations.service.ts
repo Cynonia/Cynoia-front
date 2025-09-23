@@ -35,13 +35,22 @@ export interface Reservation {
   memberId: string;
   member: Member;
   date: Date;
-  startTime: string;
-  endTime: string;
+  startAt: string;
+  endAt: string;
   status: 'en-attente' | 'confirmee' | 'rejetee' | 'annulee';
   reason?: string; // Raison du rejet ou de l'annulation
   createdAt: Date;
   updatedAt: Date;
   notes?: string;
+  espace?:   {
+    name: string;
+    images: string[];
+    location: string;
+  }
+  user?: {
+    firstName: string;
+    lastName: string;
+  }
 }
 
 export interface ReservationFilter {
@@ -195,8 +204,8 @@ export class ReservationsService {
         memberId: '1',
         member: members[0],
         date: new Date('2025-01-15'),
-        startTime: '09:00',
-        endTime: '12:00',
+        startAt: '09:00',
+        endAt: '12:00',
         status: 'en-attente',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -208,8 +217,8 @@ export class ReservationsService {
         memberId: '2',
         member: members[1],
         date: new Date('2025-01-16'),
-        startTime: '14:00',
-        endTime: '16:00',
+        startAt: '14:00',
+        endAt: '16:00',
         status: 'confirmee',
         createdAt: new Date(),
         updatedAt: new Date(),
