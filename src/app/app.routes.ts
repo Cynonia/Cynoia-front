@@ -119,6 +119,56 @@ export const routes: Routes = [
 //     canActivate: [AuthGuard],
 //     loadChildren: () => import('./modules/analytics/analytics.routes').then(m => m.analyticsRoutes)
 //   },
+  
+  // Routes pour l'interface workers (membres)
+  {
+    path: 'workers',
+    loadComponent: () => import('./modules/workers/layout/workers-layout.component').then(m => m.WorkersLayoutComponent),
+    children: [
+      {
+        path: '',
+        redirectTo: 'espaces-disponibles',
+        pathMatch: 'full'
+      },
+      {
+        path: 'espaces-disponibles',
+        loadComponent: () => import('./modules/workers/pages/espaces-disponibles/espaces-disponibles.component').then(m => m.EspacesDisponiblesComponent)
+      },
+      {
+        path: 'detail-espace/:id',
+        loadComponent: () => import('./modules/workers/pages/detail-espace/detail-espace.component').then(m => m.DetailEspaceComponent)
+      },
+      {
+        path: 'reservation/:id',
+        loadComponent: () => import('./modules/workers/pages/reservation/reservation.component').then(m => m.ReservationComponent)
+      },
+      {
+        path: 'paiement',
+        loadComponent: () => import('./modules/workers/pages/paiement/paiement.component').then(m => m.PaiementComponent)
+      },
+      {
+        path: 'confirmation',
+        loadComponent: () => import('./modules/workers/pages/confirmation/confirmation.component').then(m => m.ConfirmationComponent)
+      },
+      {
+        path: 'mes-reservations',
+        loadComponent: () => import('./modules/workers/pages/mes-reservations/mes-reservations.component').then(m => m.MesReservationsComponent)
+      },
+      {
+        path: 'historique-paiements',
+        loadComponent: () => import('./modules/workers/pages/historique-des-paiements/historique-des-paiements.component').then(m => m.HistoriqueDesPaiementsComponent)
+      },
+      {
+        path: 'messages',
+        loadComponent: () => import('./modules/workers/pages/messages/messages.component').then(m => m.MessagesComponent)
+      },
+      {
+        path: 'historique-reservations',
+        loadComponent: () => import('./modules/workers/pages/historique-des-reservations/historique-des-reservations.component').then(m => m.HistoriqueDesReservationsComponent)
+      }
+    ]
+  },
+
   {
     path: '**',
     redirectTo: '/dashboard'

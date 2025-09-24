@@ -1,0 +1,321 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SpacesService, Space } from '../../../../core/services/spaces.service';
+
+@Component({
+  selector: 'app-detail-espace',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <div *ngIf="space" class="space-y-6">
+      <!-- Navigation de retour -->
+      <div class="flex items-center gap-3">
+        <button 
+          (click)="goBack()" 
+          class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">{{ space.name }}</h1>
+          <p class="text-gray-600">Cynoia Hub {{ getSpaceLocation() }}</p>
+        </div>
+      </div>
+
+      <!-- Image principale -->
+      <div class="h-64 md:h-96 bg-gray-200 rounded-xl overflow-hidden">
+        <img 
+          *ngIf="space.image" 
+          [src]="space.image" 
+          [alt]="space.name" 
+          class="w-full h-full object-cover">
+        <div 
+          *ngIf="!space.image" 
+          class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+          <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Contenu principal -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Colonne principale -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Informations de base -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">{{ space.name }}</h2>
+            
+            <!-- Évaluation et type -->
+            <div class="flex items-center gap-4 mb-4">
+              <div class="flex items-center gap-1">
+                <span class="font-semibold text-gray-900">{{ getSpaceRating() }}</span>
+                <div class="flex items-center">
+                  <svg *ngFor="let star of [1,2,3,4,5]" 
+                       [class]="star <= 4 ? 'text-yellow-400' : 'text-gray-300'"
+                       class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                </div>
+                <span class="text-gray-600">({{ getReviewCount() }} avis)</span>
+              </div>
+              <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                {{ getTypeLabel() }}
+              </span>
+            </div>
+
+            <!-- Localisation -->
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <span class="text-gray-600">{{ getSpaceLocation() }}, Côte d'Ivoire</span>
+            </div>
+
+            <!-- Capacité et horaires -->
+            <div class="flex items-center gap-6 mb-4">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span class="text-gray-600">Jusqu'à {{ space.capacity }} personnes</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-gray-600">{{ space.availability }}</span>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p class="text-gray-700">{{ space.description }}</p>
+          </div>
+
+          <!-- Équipements disponibles -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Équipements disponibles</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+                </svg>
+                <span class="text-gray-700">Wifi haut débit</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+                </svg>
+                <span class="text-gray-700">Parking gratuit</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+                <span class="text-gray-700">Impression</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3V1m0 20v-2m8-10h2m-2 4h2m-6-4h.01M17 16h.01"/>
+                </svg>
+                <span class="text-gray-700">Climatisation</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-gray-700">Café/Thé</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-gray-700">Tableau blanc</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Équipements supplémentaires -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Équipements supplémentaires</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span class="text-gray-700">Projecteur HD</span>
+                </div>
+                <span class="text-sm text-gray-500">Inclus</span>
+              </div>
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span class="text-gray-700">Flipchart</span>
+                </div>
+                <span class="text-sm text-gray-500">Inclus</span>
+              </div>
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="text-gray-700">Matériel de visioconférence</span>
+                </div>
+                <span class="text-sm text-purple-600 font-medium">+5 000 FCFA</span>
+              </div>
+              <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div class="flex items-center gap-3">
+                  <span class="text-gray-700">Imprimante/Scanner</span>
+                </div>
+                <span class="text-sm text-purple-600 font-medium">+2 000 FCFA</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disponibilités aujourd'hui -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Disponibilités aujourd'hui</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div *ngFor="let slot of availableSlots" 
+                   [class]="slot.available ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'"
+                   class="p-3 text-center border rounded-lg">
+                <div class="font-medium text-sm">{{ slot.time }}</div>
+                <div [class]="slot.available ? 'text-green-600' : 'text-gray-400'" 
+                     class="text-xs mt-1">
+                  {{ slot.available ? 'Libre' : 'Occupé' }}
+                </div>
+              </div>
+            </div>
+            <button 
+              (click)="showMoreSlots()"
+              class="mt-4 text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              Voir plus de créneaux
+            </button>
+          </div>
+
+          <!-- Conditions -->
+          <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Conditions</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>• Annulation gratuite jusqu'à 24h avant</li>
+              <li>• Capacité maximale respectée</li>
+              <li>• Respect des horaires de réservation</li>
+              <li>• Maintenir la propreté des lieux</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Sidebar de réservation -->
+        <div class="lg:col-span-1">
+          <div class="bg-white p-6 rounded-xl border border-gray-200 sticky top-6">
+            <div class="flex items-center gap-2 mb-4">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+              </svg>
+              <h3 class="text-lg font-semibold text-gray-900">{{ space.name }}</h3>
+            </div>
+            
+            <div class="text-sm text-gray-600 mb-4">
+              Capacité {{ space.capacity }} personnes • {{ space.price | number }} FCFA/jour
+            </div>
+
+            <!-- Prix -->
+            <div class="text-right mb-6">
+              <div class="text-2xl font-bold text-purple-600">{{ space.price | number }} FCFA</div>
+              <div class="text-sm text-gray-500">par jour</div>
+            </div>
+
+            <!-- Bouton de réservation -->
+            <button 
+              (click)="openReservationModal()"
+              [disabled]="space.status !== 'disponible'"
+              class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors">
+              {{ space.status === 'disponible' ? 'Réserver cet espace' : 'Indisponible' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal vide pour l'instant -->
+    <div *ngIf="space && space.status !== 'disponible'" class="text-center py-12">
+      <div class="text-red-600 text-lg font-semibold">Cet espace n'est pas disponible actuellement</div>
+    </div>
+  `
+})
+export class DetailEspaceComponent implements OnInit {
+  space: Space | null = null;
+  availableSlots = [
+    { time: '08:00 - 10:00', available: true },
+    { time: '10:00 - 12:00', available: false },
+    { time: '12:00 - 14:00', available: true },
+    { time: '14:00 - 16:00', available: true },
+    { time: '16:00 - 18:00', available: false },
+    { time: '18:00 - 20:00', available: true }
+  ];
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private spacesService: SpacesService
+  ) {}
+
+  ngOnInit(): void {
+    const spaceId = this.route.snapshot.paramMap.get('id');
+    if (spaceId) {
+      this.space = this.spacesService.getSpaceById(spaceId) || null;
+      if (!this.space) {
+        this.router.navigate(['/workers/espaces-disponibles']);
+      }
+    }
+  }
+
+  goBack(): void {
+    this.router.navigate(['/workers/espaces-disponibles']);
+  }
+
+  getSpaceLocation(): string {
+    if (!this.space) return '';
+    if (this.space.name.toLowerCase().includes('abidjan')) return 'Abidjan';
+    if (this.space.name.toLowerCase().includes('cocody')) return 'Cocody';
+    if (this.space.name.toLowerCase().includes('plateau')) return 'Plateau';
+    if (this.space.name.toLowerCase().includes('marcory')) return 'Marcory';
+    return 'Abidjan';
+  }
+
+  getSpaceRating(): string {
+    return '4.8';
+  }
+
+  getReviewCount(): number {
+    return 124;
+  }
+
+  getTypeLabel(): string {
+    if (!this.space) return '';
+    switch (this.space.type) {
+      case 'bureau':
+        return 'Bureau privé';
+      case 'salle':
+        return 'Salle de réunion';
+      case 'equipement':
+        return 'Équipement';
+      default:
+        return this.space.type;
+    }
+  }
+
+  showMoreSlots(): void {
+    // Afficher plus de créneaux ou naviguer vers le calendrier
+    console.log('Afficher plus de créneaux');
+  }
+
+  openReservationModal(): void {
+    if (this.space) {
+      this.router.navigate(['/workers/reservation', this.space.id]);
+    }
+  }
+}
