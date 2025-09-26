@@ -140,12 +140,12 @@ export class CalendarService {
     const space = this.spacesService.getSpaceById(reservation.spaceId);
     
     // Conversion des heures string en Date
-    const startDate = new Date(reservation.date);
-    const endDate = new Date(reservation.date);
+    const startDate = new Date(reservation.reservationDate);
+    const endDate = new Date(reservation.reservationDate);
     
     // Parse des heures (format "HH:MM")
-    const [startHour, startMinute] = reservation.startAt.split(':').map(Number);
-    const [endHour, endMinute] = reservation.endAt.split(':').map(Number);
+    const [startHour, startMinute] = reservation.startTime.split(':').map(Number);
+    const [endHour, endMinute] = reservation.endTime.split(':').map(Number);
     
     startDate.setHours(startHour, startMinute, 0, 0);
     endDate.setHours(endHour, endMinute, 0, 0);
@@ -300,7 +300,7 @@ export class CalendarService {
 
     return allReservations.filter(reservation => {
       // Filtrer par période - comparer les dates
-      const reservationDate = reservation.date;
+      const reservationDate = reservation.reservationDate;
       
       const isInPeriod = reservationDate >= startDate && reservationDate <= endDate;
 

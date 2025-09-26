@@ -93,7 +93,7 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                       </ng-template>
                     </div>
                     <div>
-                      <h3 class="font-semibold text-gray-900">{{ reservation.space?.name || 'Espace inconnu' }}</h3>
+                      <h3 class="font-semibold text-gray-900">{{ reservation.espace?.name || 'Espace inconnu' }}</h3>
                       <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                         En attente
                       </span>
@@ -133,14 +133,14 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.startAt) }}</span>
+                    <span>{{ formatDate(reservation.reservationDate) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau :  {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
+                    <span>Créneau :  {{ formatTime(reservation.startTime) + " - " +  formatTime(reservation.endTime) }}</span>
                   </div>
                 </div>
               </div>
@@ -208,14 +208,14 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.startAt) }}</span>
+                    <span>{{ formatDate(reservation.startTime) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau :  {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
+                    <span>Créneau :  {{ formatTime(reservation.startTime) + " - " +  formatTime(reservation.endTime) }}</span>
                   </div>
                 </div>
               </div>
@@ -283,14 +283,14 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.startAt) }}</span>
+                    <span>{{ formatDate(reservation.startTime) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Créneau : {{ formatTime(reservation.startAt) + " - " +  formatTime(reservation.endAt) }}</span>
+                    <span>Créneau : {{ formatTime(reservation.startTime) + " - " +  formatTime(reservation.endTime) }}</span>
                   </div>
                 </div>
               </div>
@@ -425,7 +425,7 @@ export class ReservationsComponent implements OnInit {
     }
   }
 
-  formatDate(dateString: string): string {
+  formatDate(dateString: string|Date): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
       year: 'numeric',

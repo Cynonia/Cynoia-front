@@ -34,31 +34,31 @@ export interface Reservation {
   space?: Space; // Populated from SpacesService
   memberId: string;
   member: Member;
-  date: Date;
-  startAt: string;
-  endAt: string;
+  reservationDate: Date|string;
+  startTime: string;
+  endTime: string;
   status: 'en-attente' | 'confirmee' | 'rejetee' | 'annulee';
   reason?: string; // Raison du rejet ou de l'annulation
   createdAt: Date;
   updatedAt: Date;
   notes?: string;
-  espace?:   {
+  espace?: {
     name: string;
     images: string[];
     location: string;
-  }
+  };
   user?: {
     firstName: string;
     lastName: string;
-  }
+  };
 }
 
 export interface ReservationFilter {
   status?: Reservation['status'];
   spaceId?: string;
   memberId?: string;
-  dateFrom?: Date;
-  dateTo?: Date;
+  dateFrom?: Date|string;
+  dateTo?: Date|string;
 }
 
 export interface ReservationStats {
@@ -96,38 +96,72 @@ export class ReservationsService {
   }
 
   getReservations(): Observable<Reservation[]> {
-  return this.currentUser$.pipe(
-    first(),
-    switchMap((currentUser) => {
-      const token = sessionStorage.getItem('token'); // ou depuis AuthService si tu préfères
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
+    return this.currentUser$.pipe(
+      first(),
+      switchMap((currentUser) => {
+        const token = sessionStorage.getItem('token'); // ou depuis AuthService si tu préfères
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
-      return this.http.get<Response>(
-        `${this.API_URL}/entity/${currentUser?.entity.id}`,
-        { headers }
-      );
-    }),
-    map((response) => {
-      const reservations = (response.data as Reservation[]).map((reservation: any) => ({
-        ...reservation,
-        date: new Date(reservation.date),
-        createdAt: new Date(reservation.createdAt),
-        updatedAt: new Date(reservation.updatedAt),
-      }));
+        return this.http.get<Response>(
+          `${this.API_URL}/entity/${currentUser?.entity.id}`,
+          { headers }
+        );
+      }),
+      map((response) => {
+        const reservations = (response.data as Reservation[]).map(
+          (reservation: any) => ({
+            ...reservation,
+            date: new Date(reservation.date),
+            createdAt: new Date(reservation.createdAt),
+            updatedAt: new Date(reservation.updatedAt),
+          })
+        );
 
-      this.populateSpaceInfo(reservations);
-      return reservations;
-    }),
-    catchError((error) => {
-      console.error('Erreur lors du chargement des réservations :', error);
-      return throwError(() => error);
-    })
-  );
-}
+        this.populateSpaceInfo(reservations);
+        return reservations;
+      }),
+      catchError((error) => {
+        console.error('Erreur lors du chargement des réservations :', error);
+        return throwError(() => error);
+      })
+    );
+  }
 
+  createReservation(
+    reservationData: any
+  ): Observable<Reservation> {
+    return this.currentUser$.pipe(
+      first(),
+      switchMap((currentUser) => {
+        const token = sessionStorage.getItem('token'); // ou depuis AuthService si tu préfères
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
+        return this.http.post<Response>(this.API_URL, reservationData, { headers });
+      }),
+      map((response) => {
+        const reservation = {
+          ...(response.data as Reservation),
+          reservationDate: new Date((response.data as Reservation).reservationDate),
+          createdAt: new Date((response.data as Reservation).createdAt),
+          updatedAt: new Date((response.data as Reservation).updatedAt),
+        };
+
+        const currentReservations = this.reservationsSubject.value;
+        const updatedReservations = [...currentReservations, reservation];
+        this.saveReservations(updatedReservations);
+
+        return reservation;
+      }),
+      catchError((error) => {
+        console.error('Erreur lors de la création de la réservation :', error);
+        return throwError(() => error);
+      })
+    );
+  }
 
   private loadReservations(): void {
     const savedReservations = localStorage.getItem(this.STORAGE_KEY);
@@ -203,9 +237,9 @@ export class ReservationsService {
         spaceId: spaces[0]?.id || '1',
         memberId: '1',
         member: members[0],
-        date: new Date('2025-01-15'),
-        startAt: '09:00',
-        endAt: '12:00',
+        reservationDate: new Date('2025-01-15'),
+        startTime: '09:00',
+        endTime: '12:00',
         status: 'en-attente',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -216,9 +250,9 @@ export class ReservationsService {
         spaceId: spaces[1]?.id || '2',
         memberId: '2',
         member: members[1],
-        date: new Date('2025-01-16'),
-        startAt: '14:00',
-        endAt: '16:00',
+        reservationDate: new Date('2025-01-16'),
+        startTime: '14:00',
+        endTime: '16:00',
         status: 'confirmee',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -276,11 +310,11 @@ export class ReservationsService {
     }
 
     if (filter.dateFrom) {
-      reservations = reservations.filter((r) => r.date >= filter.dateFrom!);
+      reservations = reservations.filter((r) => r.reservationDate >= filter.dateFrom!);
     }
 
     if (filter.dateTo) {
-      reservations = reservations.filter((r) => r.date <= filter.dateTo!);
+      reservations = reservations.filter((r) => r.reservationDate <= filter.dateTo!);
     }
 
     return reservations;

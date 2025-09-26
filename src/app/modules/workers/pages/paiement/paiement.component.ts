@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { start } from 'node:repl';
+import { ReservationsService } from '../../../../core/services';
 
 interface PaymentMethod {
   id: string;
@@ -278,7 +280,7 @@ export class PaiementComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private reservationsService: ReservationsService) {}
 
   ngOnInit(): void {
     this.loadReservationData();
@@ -367,6 +369,23 @@ export class PaiementComponent implements OnInit {
     try {
       // Simuler le traitement du paiement
       await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const reservation = {
+        status: "en-cours",
+        espacesId: this.reservationData.space.id,
+        startTime: this.reservationData.startTime,
+        endTime: this.reservationData.endTime,
+        reservationDate: this.reservationData.date,
+      }
+
+      this.reservationsService.createReservation(reservation).subscribe({
+        next: (res) => {
+          console.log('Réservation créée avec succès:', res);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la création de la réservation:', err);
+        }
+      });
 
       // Préparer les données de confirmation
       const confirmationData = {
