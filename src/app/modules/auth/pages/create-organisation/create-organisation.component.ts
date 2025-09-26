@@ -23,8 +23,6 @@ export class CreateOrganisationComponent {
   organisationForm: FormGroup;
   loading = false;
   currentUser$ = this.authService.currentUser$;
-  cloudName = 'dorovcxxj';
-  uploadPreset = 'cynoia';
 
   constructor(
     private fb: FormBuilder,
@@ -34,9 +32,6 @@ export class CreateOrganisationComponent {
   ) {
     this.organisationForm = this.fb.group({
       name: ['', [Validators.required]],
-      logo: [null],
-      couleur: ['', [Validators.required]],
-      avatar: [null],
       domaine: ['', [Validators.required]],
     });
   }
@@ -53,38 +48,6 @@ export class CreateOrganisationComponent {
     return this.organisationForm.get(fieldName)?.touched || false;
   }
 
-  onFileChange(event: Event, fieldName: 'logo' | 'avatar') {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      console.log(`📁 File selected for ${fieldName}:`, file);
-      this.organisationForm.get(fieldName)?.setValue(file);
-    } else {
-      this.organisationForm.get(fieldName)?.setValue(null);
-    }
-  }
-
-  uploadToCloudinary(file: File): Promise<string> {
-    const url = `https://api.cloudinary.com/v1_1/${this.cloudName}/upload`;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', this.uploadPreset);
-
-    return fetch(url, {
-      method: 'POST',
-      body: formData,
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.secure_url) {
-          return data.secure_url;
-        } else {
-          throw new Error('Cloudinary upload failed');
-        }
-      });
-  }
-
   logout(): void {
     this.authService.signOut();
     console.log("deconn");
@@ -96,51 +59,29 @@ export class CreateOrganisationComponent {
       this.loading = true;
 
       try {
-        // Get the current user snapshot from observable
-        const currentUser = await firstValueFrom(this.currentUser$);
-
-        if (!currentUser || !currentUser.id) {
-          throw new Error('Utilisateur non connecté');
-        }
-
-        const logoFile = this.organisationForm.get('logo')?.value;
-        const avatarFile = this.organisationForm.get('avatar')?.value;
-
-        const logoUrl = logoFile
-          ? await this.uploadToCloudinary(logoFile)
-          : '';
-        const avatarUrl = avatarFile
-          ? await this.uploadToCloudinary(avatarFile)
-          : '';
-
-        const formData = {
+        // Sauvegarder les données de l'organisation temporairement
+        const organizationData = {
           name: this.organisationForm.get('name')?.value,
-          logo: logoUrl,
-          couleur: this.organisationForm.get('couleur')?.value,
-          avatar: avatarUrl,
-          domaine: this.organisationForm.get('domaine')?.value,
-          userId: currentUser.id,  // Use the snapshot userId here
+          domaine: this.organisationForm.get('domaine')?.value
         };
 
-        this.organisationService.createOrganisation(formData).subscribe({
-          next: (response) => {
-            console.log('Organisation créée ✅', response);
-            this.loading = false;
-            this.router.navigate(['']);
-          },
-          error: (err) => {
-            console.error("Erreur lors de l'envoi ❌", err);
-            this.loading = false;
-          },
-        });
+        // Sauvegarder dans localStorage pour l'utiliser dans les étapes suivantes
+        localStorage.setItem('organizationData', JSON.stringify(organizationData));
+
+        this.loading = false;
+        
+        // Rediriger vers l'étape de branding
+        this.router.navigate(['/auth/create-organisation/branding']);
+
       } catch (error) {
-        console.error('Erreur de Cloudinary ou utilisateur non connecté ❌', error);
+        console.error('Erreur lors de la sauvegarde des données ❌', error);
         this.loading = false;
       }
     }
   }
 
   onCancel() {
-    // Add navigation logic here
+    // Retourner à la page de bienvenue
+    this.router.navigate(['/auth/create-organisation']);
   }
 }

@@ -78,17 +78,12 @@ export const routes: Routes = [
           .then(m => m.CreateOrganisationComponent)
       },
       {
-        path: 'branding/logo',
-        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/logo/logo.component')
-          .then(m => m.BrandingLogoComponent)
+        path: 'branding',
+        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/branding.component')
+          .then(m => m.BrandingComponent)
       },
       {
-        path: 'branding/colors',
-        loadComponent: () => import('./modules/auth/pages/create-organisation/branding/colors/colors.component')
-          .then(m => m.BrandingColorsComponent)
-      },
-      {
-        path: 'branding/preview',
+        path: 'preview',
         loadComponent: () => import('./modules/auth/pages/create-organisation/branding/preview/preview.component')
           .then(m => m.BrandingPreviewComponent)
       }

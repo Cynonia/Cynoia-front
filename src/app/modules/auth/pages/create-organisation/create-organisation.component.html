@@ -22,7 +22,7 @@
           Créer votre organisation
         </h1>
         <p class="text-gray-600 mt-2">
-          Votre espace pour gérer votre équipe et vos projets.
+          Commençons par les informations de base de votre organisation.
         </p>
       </div>
       <form
@@ -30,55 +30,38 @@
         (ngSubmit)="onSubmit()"
         class="space-y-6"
       >
-        <div class="space-y-4">
-          <label class="block text-gray-700 font-medium">
-            Nom de l'entreprise <span class="text-red-500">*</span>
-          </label>
-          <ui-input
-            type="text"
-            placeholder="Ex: Bakemono"
-            formControlName="name"
-            [error]="getFieldError('name')"
-            [touched]="isFieldTouched('name')"
-          ></ui-input>
+        <div class="space-y-6">
+          <div>
+            <label class="block text-gray-700 font-medium mb-2">
+              Nom de l'organisation <span class="text-red-500">*</span>
+            </label>
+            <ui-input
+              type="text"
+              placeholder="Ex: Bakemono"
+              formControlName="name"
+              [error]="getFieldError('name')"
+              [touched]="isFieldTouched('name')"
+            ></ui-input>
+          </div>
 
-          <label class="block text-gray-700 font-medium">
-            Domaine <span class="text-red-500">*</span>
-          </label>
-          <ui-input
-            type="text"
-            placeholder="Ex: bakemono.com"
-            formControlName="domaine"
-            [error]="getFieldError('domaine')"
-            [touched]="isFieldTouched('domaine')"
-          ></ui-input>
-
-          <label class="block text-gray-700 font-medium"
-            >Logo de l'entreprise</label
-          >
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onFileChange($event, 'logo')"
-          />
-        </div>
-
-        <div class="space-y-4">
-          <label class="block text-gray-700 font-medium"
-            >Couleur principale</label
-          >
-          <ui-input type="color" formControlName="couleur"></ui-input>
-
-          <label class="block text-gray-700 font-medium">Avatar</label>
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onFileChange($event, 'avatar')"
-          />
+          <div>
+            <label class="block text-gray-700 font-medium mb-2">
+              Domaine <span class="text-red-500">*</span>
+            </label>
+            <ui-input
+              type="text"
+              placeholder="Ex: bakemono.com"
+              formControlName="domaine"
+              [error]="getFieldError('domaine')"
+              [touched]="isFieldTouched('domaine')"
+            ></ui-input>
+          </div>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4 pt-6">
-          <ui-button variant="outline" [fullWidth]="true"> Annuler </ui-button>
+          <ui-button variant="outline" [fullWidth]="true" type="button" (click)="onCancel()"> 
+            Annuler 
+          </ui-button>
 
           <ui-button
             type="submit"
@@ -87,7 +70,7 @@
             [loading]="loading"
             [disabled]="organisationForm.invalid"
           >
-            Commencer maintenant
+            Continuer
           </ui-button>
         </div>
       </form>
