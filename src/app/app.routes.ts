@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { RoleGuard } from './core/guards';
 
 export const routes: Routes = [
   
@@ -22,7 +23,7 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard,RoleGuard],
     loadComponent: () => import('./modules/dashboard/layout/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
     children: [
       {
@@ -57,7 +58,13 @@ export const routes: Routes = [
         path: 'parametres',
         loadComponent: () => import('./modules/dashboard/pages/parametres/parametres.component').then(m => m.ParametresComponent)
       }
-    ]
+    ],
+    data: { roles: ['ADMIN', 'MANAGER', 'MEMBER'] }
+  },
+
+  {
+    path: '404',
+    loadComponent: () => import('./shared/components/not-found/not-found.component').then(m => m.NotFoundComponent)
   },
   // {
   //   path: '',

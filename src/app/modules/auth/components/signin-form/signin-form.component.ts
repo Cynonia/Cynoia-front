@@ -1,22 +1,29 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { InputComponent } from '../../../../shared/components/input/input.component';
-import { AuthService, SignInCredentials } from '../../../../core/services/auth.service';
+import {
+  AuthService,
+  SignInCredentials,
+} from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signin-form',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    ButtonComponent,
-    InputComponent
-  ],
+  imports: [CommonModule, ReactiveFormsModule, ButtonComponent, InputComponent],
   template: `
-    <form [formGroup]="signInForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+    <form
+      [formGroup]="signInForm"
+      (ngSubmit)="onSubmit()"
+      class="flex flex-col gap-6"
+    >
       <!-- Email Input -->
       <ui-input
         label="Email Address"
@@ -28,8 +35,19 @@ import { Router } from '@angular/router';
         [touched]="isFieldTouched('email')"
         formControlName="email"
       >
-        <svg slot="icon-left" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+        <svg
+          slot="icon-left"
+          class="w-5 h-5 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+          ></path>
         </svg>
       </ui-input>
 
@@ -44,14 +62,28 @@ import { Router } from '@angular/router';
         [touched]="isFieldTouched('password')"
         formControlName="password"
       >
-        <svg slot="icon-left" class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        <svg
+          slot="icon-left"
+          class="w-5 h-5 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+          ></path>
         </svg>
       </ui-input>
 
       <!-- Remember Me & Forgot Password -->
       <div class="flex items-center justify-between">
-        <a href="/auth/forgot-password" class="text-sm text-blue-600 hover:text-blue-300">
+        <a
+          href="/auth/forgot-password"
+          class="text-sm text-blue-600 hover:text-blue-300"
+        >
           Forgot password?
         </a>
       </div>
@@ -68,15 +100,19 @@ import { Router } from '@angular/router';
         {{ loading ? 'Signing in...' : 'Sign In' }}
       </ui-button>
     </form>
-  `
+  `,
 })
 export class SigninFormComponent {
   @Output() formSubmit = new EventEmitter<SignInCredentials>();
-  
+
   signInForm: FormGroup;
   loading = false;
 
-  constructor(private fb: FormBuilder,private authService: AuthService,private router: Router) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
     this.signInForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
@@ -94,7 +130,9 @@ export class SigninFormComponent {
       }
       if (field.errors?.['minlength']) {
         const requiredLength = field.errors?.['minlength'].requiredLength;
-        return `${this.getFieldLabel(fieldName)} must be at least ${requiredLength} characters`;
+        return `${this.getFieldLabel(
+          fieldName
+        )} must be at least ${requiredLength} characters`;
       }
     }
     return '';
@@ -107,7 +145,7 @@ export class SigninFormComponent {
   private getFieldLabel(fieldName: string): string {
     const labels: Record<string, string> = {
       email: 'Email',
-      password: 'Password'
+      password: 'Password',
     };
     return labels[fieldName] || fieldName;
   }
@@ -117,27 +155,31 @@ export class SigninFormComponent {
       this.loading = true;
       console.log(this.signInForm.value);
       this.authService.signIn(this.signInForm.value).subscribe({
-      next: (response) => {
-        console.log("login réussie ✅", response);
-        this.loading = false;
-        if(response.data.user.entity){
-          this.router.navigate(["/dashboard"])
-        }else{  
-          this.router.navigate(["/auth/create-organisation"])
-        }
-
-      },
-      error: (err) => {
-        console.error("Erreur de la connexion ❌", err);
-        this.loading = false;
-      }})
+        next: (response) => {
+          console.log('login réussie ✅', response);
+          this.loading = false;
+          if (
+            response.data.user.entity 
+          ) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            if (response.data.user.role == 'CLIENT') {
+              this.router.navigate(['/workers/espaces-disponibles']);
+            } else this.router.navigate(['/auth/create-organisation']);
+          }
+        },
+        error: (err) => {
+          console.error('Erreur de la connexion ❌', err);
+          this.loading = false;
+        },
+      });
     } else {
       this.markAllFieldsAsTouched();
     }
   }
 
   private markAllFieldsAsTouched(): void {
-    Object.keys(this.signInForm.controls).forEach(key => {
+    Object.keys(this.signInForm.controls).forEach((key) => {
       this.signInForm.get(key)?.markAsTouched();
     });
   }
