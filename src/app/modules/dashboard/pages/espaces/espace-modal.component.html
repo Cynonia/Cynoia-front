@@ -1,0 +1,131 @@
+<form [formGroup]="spaceForm" (ngSubmit)="saveSpace()" class="p-6 space-y-4 bg-white rounded">
+  <!-- Nom -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      Nom de l’espace <span class="text-red-500">*</span>
+    </label>
+    <input
+      type="text"
+      formControlName="name"
+      placeholder="Bureau 101"
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    />
+  </div>
+
+  <!-- Surface -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Surface (m²)</label>
+    <input
+      type="number"
+      formControlName="surface"
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    />
+  </div>
+
+  <!-- Type -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      Type d’espace <span class="text-red-500">*</span>
+    </label>
+    <select
+      formControlName="typeEspacesId"
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    >
+      <option [ngValue]="null" disabled>-- Sélectionner --</option>
+      <option [value]="1">Bureau</option>
+      <option [value]="2">Salle</option>
+      <option [value]="3">Équipement</option>
+    </select>
+  </div>
+
+  <!-- Capacité & Prix -->
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Capacité</label>
+      <input
+        type="number"
+        formControlName="capacity"
+        min="0"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Prix (FCFA/heure)</label>
+      <input
+        type="number"
+        formControlName="pricePerHour"
+        min="0"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+      />
+    </div>
+  </div>
+
+  <!-- Disponibilité (location + availability champ combiné ou à renommer) -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Localisation</label>
+    <input
+      type="text"
+      formControlName="location"
+      placeholder="Abidjan, Plateau..."
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    />
+  </div>
+
+  <!-- Description -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+    <textarea
+      formControlName="description"
+      rows="3"
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    ></textarea>
+  </div>
+
+  <!-- Entité -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">ID Entité</label>
+    <input
+      type="number"
+      formControlName="entitiesId"
+      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+    />
+  </div>
+
+  <!-- Status et Validation -->
+  <div class=" grid-cols-2 gap-4 hidden">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Disponible ?</label>
+      <input type="checkbox" formControlName="status" />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-2">Validé ?</label>
+      <input type="checkbox" formControlName="validation" />
+    </div>
+  </div>
+
+  <!-- Upload d’image (plusieurs images) -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Images</label>
+    <input type="file" (change)="onImageSelect($event)" multiple accept="image/*" />
+    <div class="grid grid-cols-3 gap-2 mt-2" *ngIf="imagePreviews.length > 0">
+      <div class="relative" *ngFor="let img of imagePreviews; let i = index">
+        <img [src]="img" class="rounded w-full h-24 object-cover" />
+        <button
+          type="button"
+          class="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+          (click)="removeImage(i)"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boutons -->
+  <div class="flex gap-3 pt-4">
+    <button type="button" (click)="closeModal()" class="btn-secondary">Annuler</button>
+    <button type="submit" [disabled]="spaceForm.invalid" class="btn-primary">
+      {{ editingSpace ? 'Modifier' : 'Ajouter' }}
+    </button>
+  </div>
+</form>
