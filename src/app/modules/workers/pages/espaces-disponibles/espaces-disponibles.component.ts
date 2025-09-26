@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SpacesService, Space } from '../../../../core/services/spaces.service';
+import { EspaceService } from '../../../../core/services/espace.service';
 
 @Component({
   selector: 'app-espaces-disponibles',
@@ -33,7 +33,6 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
 
       <!-- Filtres -->
       <div class="flex flex-wrap gap-4">
-        <!-- Filtre par région -->
         <div class="flex flex-col">
           <label class="text-sm font-medium text-gray-700 mb-2">Toutes régions</label>
           <select 
@@ -47,7 +46,6 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
           </select>
         </div>
 
-        <!-- Filtre par type -->
         <div class="flex flex-col">
           <label class="text-sm font-medium text-gray-700 mb-2">Tous types</label>
           <select 
@@ -61,7 +59,6 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
           </select>
         </div>
 
-        <!-- Filtre par prix -->
         <div class="flex flex-col">
           <label class="text-sm font-medium text-gray-700 mb-2">Tous prix</label>
           <select 
@@ -76,8 +73,17 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
         </div>
       </div>
 
+      <!-- Loader -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-10">
+        <svg class="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span class="ml-3 text-purple-600 font-medium">Chargement des espaces...</span>
+      </div>
+
       <!-- Résultats -->
-      <div>
+      <div *ngIf="!isLoading">
         <p class="text-gray-600 mb-6">{{ filteredSpaces.length }} espace{{ filteredSpaces.length > 1 ? 's' : '' }} trouvé{{ filteredSpaces.length > 1 ? 's' : '' }}</p>
 
         <!-- Grille des espaces -->
@@ -87,7 +93,7 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
             class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
             (click)="goToSpaceDetail(space.id)">
             
-            <!-- Image de l'espace -->
+            <!-- Image -->
             <div class="h-48 bg-gray-200 relative overflow-hidden">
               <img 
                 *ngIf="space.image" 
@@ -98,11 +104,11 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
                 *ngIf="!space.image" 
                 class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                 <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
                 </svg>
               </div>
 
-              <!-- Note et badge -->
+              <!-- Badge note -->
               <div class="absolute top-3 right-3 flex items-center gap-2">
                 <div class="bg-white/90 px-2 py-1 rounded-lg flex items-center gap-1">
                   <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -124,15 +130,13 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
               </div>
             </div>
 
-            <!-- Contenu de la carte -->
+            <!-- Contenu -->
             <div class="p-4">
-              <!-- En-tête avec nom et hub -->
               <div class="mb-2">
                 <h3 class="font-semibold text-lg text-gray-900">{{ space.name }}</h3>
                 <p class="text-sm text-gray-600">Cynoia Hub {{ getSpaceLocation(space) }}</p>
               </div>
 
-              <!-- Détails -->
               <div class="flex items-center gap-4 text-sm text-gray-600 mb-3">
                 <div class="flex items-center gap-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +152,6 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
                 </div>
               </div>
 
-              <!-- Équipements -->
               <div class="flex items-center gap-2 mb-4">
                 <div *ngIf="hasWifi(space)" class="flex items-center gap-1 text-xs text-gray-500">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,15 +173,10 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
                 </div>
               </div>
 
-              <!-- Prix et statut -->
               <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <span 
-                    [class]="getStatusBadgeClass(space.status)"
-                    class="px-3 py-1 text-xs font-medium rounded-full">
-                    {{ getStatusLabel(space.status) }}
-                  </span>
-                </div>
+                <span [class]="getStatusBadgeClass(space.status)" class="px-3 py-1 text-xs font-medium rounded-full">
+                  {{ getStatusLabel(space.status) }}
+                </span>
                 <div class="text-right">
                   <div class="text-lg font-bold text-purple-600">{{ space.price | number }} FCFA</div>
                   <div class="text-xs text-gray-500">par jour</div>
@@ -188,7 +186,7 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
           </div>
         </div>
 
-        <!-- État vide -->
+        <!-- Aucun résultat -->
         <div *ngIf="filteredSpaces.length === 0" class="text-center py-12">
           <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -201,25 +199,60 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
   `
 })
 export class EspacesDisponiblesComponent implements OnInit {
-  spaces: Space[] = [];
-  filteredSpaces: Space[] = [];
+  spaces: UiSpace[] = [];
+  filteredSpaces: UiSpace[] = [];
+  isLoading = false;
   searchTerm = '';
   selectedRegion = '';
   selectedType = '';
   selectedPriceRange = '';
 
-  constructor(
-    private spacesService: SpacesService,
-    private router: Router
-  ) {}
+  constructor(private espaceService: EspaceService, private router: Router) {}
 
   ngOnInit(): void {
     this.loadSpaces();
   }
 
   private loadSpaces(): void {
-    this.spaces = this.spacesService.getAllSpaces().filter(space => space.status === 'disponible');
-    this.filteredSpaces = [...this.spaces];
+    this.isLoading = true;
+    this.espaceService.getAll().subscribe({
+      next: (response: any) => {
+        const apiData = response.success && response.data ? response.data : response;
+        this.spaces = this.transformApiDataToUiData(apiData).filter(space => space.status === 'disponible');
+        this.filteredSpaces = [...this.spaces];
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading espaces:', error);
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private transformApiDataToUiData(apiData: any[]): UiSpace[] {
+    return apiData.map((space: any) => ({
+      id: space.id,
+      name: space.name,
+      description: space.description,
+      capacity: space.capacity,
+      status: space.status ? 'disponible' : 'maintenance',
+      price: space.pricePerHour,
+      availability: '8h-18h',
+      type: this.mapTypeIdToType(space.typeEspacesId),
+      image: space.images && space.images.length > 0 ? space.images[0] : undefined,
+      entity: space.entity?.name,
+      location: space.location || undefined,
+      surface: space.surface,
+    }));
+  }
+
+  private mapTypeIdToType(typeId: number): 'bureau' | 'salle' | 'equipement' {
+    switch (typeId) {
+      case 1: return 'salle';
+      case 2: return 'bureau';
+      case 3: return 'equipement';
+      default: return 'salle';
+    }
   }
 
   onSearch(): void {
@@ -233,95 +266,78 @@ export class EspacesDisponiblesComponent implements OnInit {
   private applyFilters(): void {
     let filtered = [...this.spaces];
 
-    // Filtre par recherche
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(space => 
         space.name.toLowerCase().includes(searchLower) ||
-        space.description.toLowerCase().includes(searchLower)
+        (space.description?.toLowerCase().includes(searchLower) ?? false)
       );
     }
 
-    // Filtre par région (basé sur le nom de l'espace pour l'instant)
     if (this.selectedRegion) {
       filtered = filtered.filter(space => 
-        space.name.toLowerCase().includes(this.selectedRegion.toLowerCase())
+        (space.location ?? '').toLowerCase().includes(this.selectedRegion.toLowerCase())
       );
     }
 
-    // Filtre par type
     if (this.selectedType) {
       filtered = filtered.filter(space => space.type === this.selectedType);
     }
 
-    // Filtre par prix
     if (this.selectedPriceRange) {
-      const [min, max] = this.selectedPriceRange.split('-').map(p => p.replace('+', ''));
-      filtered = filtered.filter(space => {
-        if (max) {
-          return space.price >= parseInt(min) && space.price <= parseInt(max);
-        } else {
-          return space.price >= parseInt(min);
-        }
-      });
+      const [min, max] = this.selectedPriceRange.includes('+') 
+        ? [25000, Infinity] 
+        : this.selectedPriceRange.split('-').map(Number);
+      filtered = filtered.filter(space => space.price >= min && space.price <= max);
     }
 
     this.filteredSpaces = filtered;
   }
 
-  goToSpaceDetail(spaceId: string): void {
-    this.router.navigate(['/workers/detail-espace', spaceId]);
+  goToSpaceDetail(id: number): void {
+    this.router.navigate(['/workers/detail-espace', id]);
   }
 
-  getSpaceRating(space: Space): string {
-    // Génère une note aléatoire entre 4.0 et 4.8
-    return (4.0 + Math.random() * 0.8).toFixed(1);
+  getSpaceRating(space: UiSpace): number {
+    return parseFloat((4.0 + Math.random() * 0.8).toFixed(1)); // ou autre logique
   }
 
-  getSpaceLocation(space: Space): string {
-    // Extrait la localisation du nom ou utilise une valeur par défaut
-    if (space.name.toLowerCase().includes('abidjan')) return 'Abidjan';
-    if (space.name.toLowerCase().includes('cocody')) return 'Cocody';
-    if (space.name.toLowerCase().includes('plateau')) return 'Plateau';
-    if (space.name.toLowerCase().includes('marcory')) return 'Marcory';
-    return 'Abidjan';
-  }
-
-  hasWifi(space: Space): boolean {
-    return space.features?.includes('Wifi') || space.features?.includes('wifi') || true;
-  }
-
-  hasAC(space: Space): boolean {
-    return space.features?.includes('Climatisation') || space.features?.includes('AC') || true;
-  }
-
-  hasParking(space: Space): boolean {
-    return space.features?.includes('Parking') || space.features?.includes('parking') || false;
+  getSpaceLocation(space: UiSpace): string {
+    return space.location ?? 'Non spécifié';
   }
 
   getStatusBadgeClass(status: string): string {
-    switch (status) {
-      case 'disponible':
-        return 'bg-green-100 text-green-800';
-      case 'occupe':
-        return 'bg-red-100 text-red-800';
-      case 'maintenance':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+    return status === 'disponible' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
   }
 
   getStatusLabel(status: string): string {
-    switch (status) {
-      case 'disponible':
-        return 'Disponible';
-      case 'occupe':
-        return 'Occupé';
-      case 'maintenance':
-        return 'Maintenance';
-      default:
-        return status;
-    }
+    return status === 'disponible' ? 'Disponible' : 'En maintenance';
   }
+
+  hasWifi(space: UiSpace): boolean {
+    return true;
+  }
+
+  hasAC(space: UiSpace): boolean {
+    return true;
+  }
+
+  hasParking(space: UiSpace): boolean {
+    return true;
+  }
+}
+
+interface UiSpace {
+  id: number;
+  name: string;
+  description?: string;
+  capacity: number;
+  status: string;
+  price: number;
+  availability: string;
+  type: 'bureau' | 'salle' | 'equipement';
+  image?: string;
+  entity?: string;
+  location?: string;
+  surface?: number;
 }

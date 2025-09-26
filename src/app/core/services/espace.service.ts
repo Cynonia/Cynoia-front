@@ -28,8 +28,8 @@ export class EspaceService {
     });
   }
 
-  getById(id: number): Observable<Espace> {
-    return this.http.get<Espace>(`${this.baseUrl}/${id}`, {
+  getById(id: number): Observable<{ data: Espace }> {
+    return this.http.get<{ data: Espace }>(`${this.baseUrl}/${id}`, {
       headers: this.getAuthHeaders()
     });
   }
