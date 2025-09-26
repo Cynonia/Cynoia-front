@@ -79,9 +79,9 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      <ng-container *ngIf="reservation.space?.image; else defaultIcon">
-                        <img [src]="reservation.space?.image!" 
-                             [alt]="reservation.space?.name || 'Espace'"
+                      <ng-container *ngIf="reservation.espace?.images; else defaultIcon">
+                        <img [src]="reservation.espace?.images?.[0] || 'assets/default-space.png'" 
+                             [alt]="reservation.espace?.name || 'Espace'"
                              class="w-full h-full object-cover">
                       </ng-container>
                       <ng-template #defaultIcon>
