@@ -18,12 +18,12 @@
       <div class="bg-white p-4 rounded-xl border border-gray-200 flex items-center gap-4">
         <div class="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
           <img 
-            *ngIf="space.image" 
-            [src]="space.image" 
+            *ngIf="space.images && space.images[0]" 
+            [src]="space.images[0]" 
             [alt]="space.name" 
             class="w-full h-full object-cover">
           <div 
-            *ngIf="!space.image" 
+            *ngIf="!space.images || !space.images[0]" 
             class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
@@ -33,7 +33,7 @@
         <div class="flex-1">
           <h3 class="font-semibold text-gray-900">{{ space.name }}</h3>
           <p class="text-sm text-gray-600">Capacité {{ space.capacity }} personnes</p>
-          <p class="text-sm text-purple-600 font-medium">{{ space.price | number }} FCFA/jour</p>
+          <p class="text-sm text-purple-600 font-medium">{{ space.pricePerHour | number }} FCFA/jour</p>
         </div>
       </div>
 

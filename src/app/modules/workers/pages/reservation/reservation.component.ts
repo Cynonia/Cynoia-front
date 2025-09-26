@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SpacesService, Space } from '../../../../core/services/spaces.service';
+import { Espace } from '../../../../core/models/espace.model';
+import { EspaceService } from '../../../../core/services/espace.service';
 
 interface ReservationFormData {
   spaceId: string;
@@ -23,7 +25,7 @@ interface ReservationFormData {
   templateUrl: './reservation.component.html',
 })
 export class ReservationComponent implements OnInit {
-  space: Space | null = null;
+  space: Espace | null = null;
   today = new Date().toISOString().split('T')[0];
   selectedTimeSlot: any = null;
 
@@ -36,7 +38,7 @@ export class ReservationComponent implements OnInit {
     duration: 1,
     participants: 1,
     notes: '',
-    additionalEquipment: []
+    additionalEquipment: [],
   };
 
   availableTimeSlots = [
@@ -45,32 +47,41 @@ export class ReservationComponent implements OnInit {
     { id: '12-14', label: '12:00 - 14:00', available: true },
     { id: '14-16', label: '14:00 - 16:00', available: true },
     { id: '16-18', label: '16:00 - 18:00', available: false },
-    { id: '18-20', label: '18:00 - 20:00', available: true }
+    { id: '18-20', label: '18:00 - 20:00', available: true },
   ];
 
   additionalEquipment = [
     { id: 'projector', name: 'Projecteur HD', price: 0, included: true },
     { id: 'flipchart', name: 'Flipchart', price: 0, included: true },
-    { id: 'videoconf', name: 'Matériel de visioconférence', price: 5000, included: false },
+    {
+      id: 'videoconf',
+      name: 'Matériel de visioconférence',
+      price: 5000,
+      included: false,
+    },
     { id: 'printer', name: 'Imprimante/Scanner', price: 2000, included: false },
-    { id: 'whiteboard', name: 'Tableau blanc', price: 0, included: true }
+    { id: 'whiteboard', name: 'Tableau blanc', price: 0, included: true },
   ];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private spacesService: SpacesService
+    private spacesService: EspaceService
   ) {}
 
   ngOnInit(): void {
     const spaceId = this.route.snapshot.paramMap.get('id');
     if (spaceId) {
-      this.space = this.spacesService.getSpaceById(spaceId) || null;
-      if (this.space) {
-        this.formData.spaceId = this.space.id;
-      } else {
-        this.router.navigate(['/workers/espaces-disponibles']);
-      }
+      this.spacesService.getById(parseInt(spaceId!)).subscribe({
+        next: (response) => {
+          console.log('Fetched space details:', response);
+          this.space = response.data;
+          this.formData.spaceId = this.space.id.toString();
+        },
+        error: (err) => {
+          console.error('Error fetching space details:', err);
+        },
+      });
     }
   }
 
@@ -86,12 +97,12 @@ export class ReservationComponent implements OnInit {
     if (slot.available) {
       this.selectedTimeSlot = slot;
       this.formData.timeSlot = slot.id;
-      
+
       // Mettre à jour les heures de début et fin
       const [start, end] = slot.label.split(' - ');
       this.formData.startTime = start;
       this.formData.endTime = end;
-      
+
       // Calculer la durée
       const startHour = parseInt(start.split(':')[0]);
       const endHour = parseInt(end.split(':')[0]);
@@ -112,7 +123,7 @@ export class ReservationComponent implements OnInit {
   }
 
   incrementParticipants(): void {
-    if (this.space && this.formData.participants < this.space.capacity) {
+    if (this.space && this.formData.participants < this.space.capacity!) {
       this.formData.participants++;
     }
   }
@@ -138,12 +149,14 @@ export class ReservationComponent implements OnInit {
 
   getSpaceCost(): number {
     if (!this.space) return 0;
-    return this.space.price * this.formData.duration;
+    return this.space.pricePerHour! * this.formData.duration;
   }
 
   getEquipmentCost(): number {
     return this.formData.additionalEquipment.reduce((total, equipmentId) => {
-      const equipment = this.additionalEquipment.find(eq => eq.id === equipmentId);
+      const equipment = this.additionalEquipment.find(
+        (eq) => eq.id === equipmentId
+      );
       return total + (equipment?.price || 0);
     }, 0);
   }
@@ -153,11 +166,13 @@ export class ReservationComponent implements OnInit {
   }
 
   isFormValid(): boolean {
-    return !!(this.formData.date && 
-             this.formData.startTime && 
-             this.formData.endTime && 
-             this.formData.duration > 0 && 
-             this.formData.participants > 0);
+    return !!(
+      this.formData.date &&
+      this.formData.startTime &&
+      this.formData.endTime &&
+      this.formData.duration > 0 &&
+      this.formData.participants > 0
+    );
   }
 
   proceedToPayment(): void {
@@ -169,12 +184,15 @@ export class ReservationComponent implements OnInit {
         totalCost: this.getTotalCost(),
         spaceCost: this.getSpaceCost(),
         equipmentCost: this.getEquipmentCost(),
-        selectedEquipment: this.formData.additionalEquipment.map(id => 
-          this.additionalEquipment.find(eq => eq.id === id)
-        ).filter(eq => eq)
+        selectedEquipment: this.formData.additionalEquipment
+          .map((id) => this.additionalEquipment.find((eq) => eq.id === id))
+          .filter((eq) => eq),
       };
 
-      localStorage.setItem('pendingReservation', JSON.stringify(reservationData));
+      localStorage.setItem(
+        'pendingReservation',
+        JSON.stringify(reservationData)
+      );
       this.router.navigate(['/workers/paiement']);
     }
   }
