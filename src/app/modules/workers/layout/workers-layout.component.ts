@@ -21,4 +21,10 @@ export class WorkersLayoutComponent {
   constructor(private authService: AuthService) {
     this.currentUser$ = this.authService.currentUser$;
   }
+
+  logout(): void {
+    this.authService.signOut();
+    console.log("deconn");
+    
+  }
 }
