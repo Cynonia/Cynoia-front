@@ -11,8 +11,7 @@ import {
   throwError,
 } from 'rxjs';
 import { SpacesService, Space } from './spaces.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { ApiService, ApiResponse } from './api.service';
 import { AuthService } from './auth.service';
 
 export interface Member {
@@ -22,27 +21,19 @@ export interface Member {
   avatar?: string;
 }
 
-export interface Response {
-  success: boolean;
-  message: string;
-  data: {};
-}
-
 export interface Reservation {
   id: string;
-  spaceId: string;
-  space?: Space; // Populated from SpacesService
-  memberId: string;
-  member: Member;
   reservationDate: Date|string;
   startTime: string;
   endTime: string;
-  status: 'en-attente' | 'confirmee' | 'rejetee' | 'annulee';
-  reason?: string; // Raison du rejet ou de l'annulation
+  // Canonical status used across the app. Use normalizeReservationStatus() to map legacy values.
+  status: 'en-attente' | 'confirmee' | 'rejetee' | 'en-cours';
+  reason?: string;
   createdAt: Date;
   updatedAt: Date;
   notes?: string;
   espace?: {
+    id: string;
     name: string;
     images: string[];
     location: string;
@@ -51,6 +42,12 @@ export interface Reservation {
     firstName: string;
     lastName: string;
   };
+  // Local compatibility fields used in the app
+  spaceId?: string;
+  memberId?: string;
+  member?: Member;
+  // Resolved space reference
+  space?: Space | undefined;
 }
 
 export interface ReservationFilter {
@@ -73,8 +70,6 @@ export interface ReservationStats {
   providedIn: 'root',
 })
 export class ReservationsService {
-  private readonly STORAGE_KEY = 'cynoia_reservations';
-  private readonly MEMBERS_STORAGE_KEY = 'cynoia_members';
   currentUser$ = this.authService.currentUser$;
 
   private reservationsSubject = new BehaviorSubject<Reservation[]>([]);
@@ -82,42 +77,87 @@ export class ReservationsService {
 
   public reservations$ = this.reservationsSubject.asObservable();
   public members$ = this.membersSubject.asObservable();
-  private readonly API_URL =
-    environment.apiUrl + 'reservations' ||
-    'http://localhost:3000/api/v1/reservations';
+  private readonly endpoint = '/reservations';
+
+  /**
+   * Normalize various legacy/backend status values into the canonical set used by the UI.
+   * Returns one of: 'rejetee' | 'confirmee' | 'en-attente' | 'en-cours'
+   */
+  static normalizeReservationStatus(raw?: string|null): Reservation['status'] {
+    const s = (raw || '').toString().trim().toLowerCase();
+    if (!s) return 'en-attente';
+
+    if (s.includes('rej') || s.includes('refus') || s === 'annulee' || s === 'cancelled' || s === 'cancel') {
+      return 'rejetee';
+    }
+
+    if (s.includes('confirm') || s === 'confirmee' || s === 'confirmed' || s === 'validate' || s === 'validated') {
+      return 'confirmee';
+    }
+
+    if (s.includes('cours') || s === 'en-cours' || s === 'in_progress' || s === 'ongoing') {
+      return 'en-cours';
+    }
+
+    if (s.includes('attente') || s === 'pending' || s === 'waiting') {
+      return 'en-attente';
+    }
+
+    // default fallback
+    return 'en-attente';
+  }
 
   constructor(
     private spacesService: SpacesService,
-    private http: HttpClient,
+    private api: ApiService,
     private authService: AuthService
   ) {
-    this.loadReservations();
-    this.loadMembers();
+    // Populate initial state from API
+    this.refreshFromApi();
+  }
+
+  /**
+   * Refresh reservations and members from the API and populate local subjects.
+   */
+  refreshFromApi(): void {
+    this.getReservations().pipe(first()).subscribe({
+      next: (reservations) => {
+        // populateSpaceInfo already calls next on the reservations subject
+        console.debug('[ReservationsService] fetched', reservations.length, 'reservations from API');
+        this.reservationsSubject.next(reservations);
+        // Derive members from reservations if none provided by API
+        const members: Member[] = reservations
+          .map(r => r.member)
+          .filter((m): m is Member => !!m);
+        if (members.length > 0) this.membersSubject.next(members);
+      },
+      error: (err) => {
+        console.error('Unable to refresh reservations from API:', err);
+        this.reservationsSubject.next([]);
+      }
+    });
   }
 
   getReservations(): Observable<Reservation[]> {
     return this.currentUser$.pipe(
       first(),
       switchMap((currentUser) => {
-        const token = sessionStorage.getItem('token'); // ou depuis AuthService si tu préfères
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        return this.http.get<Response>(
-          `${this.API_URL}/entity/${currentUser?.entity.id}`,
-          { headers }
-        );
+        if (!currentUser || !currentUser.entity?.id) {
+          // No authenticated user yet - return empty list
+          return new Observable<ApiResponse<Reservation[]>>(subscriber => {
+            subscriber.next({ data: [], success: true });
+            subscriber.complete();
+          });
+        }
+        return this.api.get<Reservation[]>(`${this.endpoint}/entity/${currentUser.entity.id}`);
       }),
-      map((response) => {
-        const reservations = (response.data as Reservation[]).map(
-          (reservation: any) => ({
-            ...reservation,
-            date: new Date(reservation.date),
-            createdAt: new Date(reservation.createdAt),
-            updatedAt: new Date(reservation.updatedAt),
-          })
-        );
+      map((response: ApiResponse<Reservation[]>) => {
+        const reservations = (response.data || []).map((reservation: any) => ({
+          ...reservation,
+          reservationDate: new Date(reservation.reservationDate || reservation.date),
+          createdAt: new Date(reservation.createdAt),
+          updatedAt: new Date(reservation.updatedAt),
+        }));
 
         this.populateSpaceInfo(reservations);
         return reservations;
@@ -129,30 +169,94 @@ export class ReservationsService {
     );
   }
 
+  acceptReservationApi(id: string): Observable<Reservation> {
+    return this.currentUser$.pipe(
+      first(),
+      switchMap((currentUser) => {
+        if (!currentUser || (currentUser.role.toLowerCase() !== 'admin' && currentUser.role.toLowerCase() !== 'manager')) {
+          return throwError(() => new Error('Unauthorized'));
+        }
+        return this.api.post<Reservation>(`${this.endpoint}/${id}/validate`, {});
+      }),
+      map((response: ApiResponse<Reservation>) => {
+        const data = response.data as any;
+        const reservation: Reservation = {
+          ...data,
+          reservationDate: new Date(data.reservationDate),
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt),
+        };
+
+        const currentReservations = this.reservationsSubject.value;
+        const reservationIndex = currentReservations.findIndex((r) => r.id === id);
+        if (reservationIndex !== -1) {
+          currentReservations[reservationIndex] = reservation;
+          this.saveReservations([...currentReservations]);
+        }
+
+        return reservation;
+      }),
+      catchError((error) => {
+        console.error("Erreur lors de l'acceptation de la réservation :", error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  rejectReservationApi(id: string, reason?: string): Observable<Reservation> {
+    return this.currentUser$.pipe(
+      first(),
+      switchMap((currentUser) => {
+        if (!currentUser || (currentUser.role.toLowerCase() !== 'admin' && currentUser.role.toLowerCase() !== 'manager')) {
+          return throwError(() => new Error('Unauthorized'));
+        }
+        return this.api.post<Reservation>(`${this.endpoint}/${id}/refuse`, { reason });
+      }),
+      map((response: ApiResponse<Reservation>) => {
+        const data = response.data as any;
+        const reservation: Reservation = {
+          ...data,
+          reservationDate: new Date(data.reservationDate),
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt),
+        };
+
+        const currentReservations = this.reservationsSubject.value;
+        const reservationIndex = currentReservations.findIndex((r) => r.id === id);
+        if (reservationIndex !== -1) {
+          currentReservations[reservationIndex] = reservation;
+          this.saveReservations([...currentReservations]);
+        }
+
+        return reservation;
+      }),
+      catchError((error) => {
+        console.error('Erreur lors du rejet de la réservation :', error);
+        return throwError(() => error);
+      })
+    );
+  }
+    
+
   createReservation(
     reservationData: any
   ): Observable<Reservation> {
     return this.currentUser$.pipe(
       first(),
-      switchMap((currentUser) => {
-        const token = sessionStorage.getItem('token'); // ou depuis AuthService si tu préfères
-        const headers = {
-          Authorization: `Bearer ${token}`,
+      switchMap(() => this.api.post<Reservation>(this.endpoint, reservationData)),
+      map((response: ApiResponse<Reservation>) => {
+        const data = response.data as any;
+        const reservation: Reservation = {
+          ...data,
+          reservationDate: new Date(data.reservationDate),
+          createdAt: new Date(data.createdAt),
+          updatedAt: new Date(data.updatedAt),
         };
 
-        return this.http.post<Response>(this.API_URL, reservationData, { headers });
-      }),
-      map((response) => {
-        const reservation = {
-          ...(response.data as Reservation),
-          reservationDate: new Date((response.data as Reservation).reservationDate),
-          createdAt: new Date((response.data as Reservation).createdAt),
-          updatedAt: new Date((response.data as Reservation).updatedAt),
-        };
-
-        const currentReservations = this.reservationsSubject.value;
-        const updatedReservations = [...currentReservations, reservation];
-        this.saveReservations(updatedReservations);
+  // Append to local subject so UI updates immediately
+  const currentReservations = this.reservationsSubject.value;
+  const updatedReservations = [...currentReservations, reservation];
+  this.reservationsSubject.next(updatedReservations);
 
         return reservation;
       }),
@@ -164,40 +268,11 @@ export class ReservationsService {
   }
 
   private loadReservations(): void {
-    const savedReservations = localStorage.getItem(this.STORAGE_KEY);
-    if (savedReservations) {
-      try {
-        const reservations = JSON.parse(savedReservations).map(
-          (reservation: any) => ({
-            ...reservation,
-            date: new Date(reservation.date),
-            createdAt: new Date(reservation.createdAt),
-            updatedAt: new Date(reservation.updatedAt),
-          })
-        );
-        this.populateSpaceInfo(reservations);
-      } catch (error) {
-        console.error('Erreur lors du chargement des réservations:', error);
-        this.initializeWithSampleData();
-      }
-    } else {
-      this.initializeWithSampleData();
-    }
+    // No-op: initialization is done via refreshFromApi()
   }
 
   private loadMembers(): void {
-    const savedMembers = localStorage.getItem(this.MEMBERS_STORAGE_KEY);
-    if (savedMembers) {
-      try {
-        const members = JSON.parse(savedMembers);
-        this.membersSubject.next(members);
-      } catch (error) {
-        console.error('Erreur lors du chargement des membres:', error);
-        this.initializeMembersData();
-      }
-    } else {
-      this.initializeMembersData();
-    }
+    // Members are derived from reservations or fetched separately if an API exists
   }
 
   private initializeMembersData(): void {
@@ -221,63 +296,30 @@ export class ReservationsService {
         avatar: '',
       },
     ];
-    this.saveMembers(sampleMembers);
+    this.membersSubject.next(sampleMembers);
   }
 
   private initializeWithSampleData(): void {
-    const spaces = this.spacesService.getAllSpaces();
-    const members = [
-      { id: '1', name: 'Marie Diallo', email: 'marie.diallo@example.com' },
-      { id: '2', name: 'Ahmed Kouassi', email: 'ahmed.kouassi@example.com' },
-    ];
-
-    const sampleReservations: Reservation[] = [
-      {
-        id: '1',
-        spaceId: spaces[0]?.id || '1',
-        memberId: '1',
-        member: members[0],
-        reservationDate: new Date('2025-01-15'),
-        startTime: '09:00',
-        endTime: '12:00',
-        status: 'en-attente',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        notes: 'Réunion importante avec clients',
-      },
-      {
-        id: '2',
-        spaceId: spaces[1]?.id || '2',
-        memberId: '2',
-        member: members[1],
-        reservationDate: new Date('2025-01-16'),
-        startTime: '14:00',
-        endTime: '16:00',
-        status: 'confirmee',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        notes: 'Formation équipe',
-      },
-    ];
-
-    this.populateSpaceInfo(sampleReservations);
+    // Sample data removed: reservations are loaded from API in production
   }
 
   private populateSpaceInfo(reservations: Reservation[]): void {
-    const updatedReservations = reservations.map((reservation) => ({
-      ...reservation,
-      space: this.spacesService.getSpaceById(reservation.spaceId),
-    }));
-    this.saveReservations(updatedReservations);
+    const updatedReservations = reservations.map((reservation) => {
+      const spaceId = reservation.spaceId ?? reservation.espace?.id ?? '';
+      return {
+        ...reservation,
+        space: this.spacesService.getSpaceById(spaceId),
+      };
+    });
+    this.reservationsSubject.next(updatedReservations);
   }
 
   private saveReservations(reservations: Reservation[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(reservations));
+    // Persisting locally removed; keep in-memory subject for UI updates
     this.reservationsSubject.next(reservations);
   }
 
   private saveMembers(members: Member[]): void {
-    localStorage.setItem(this.MEMBERS_STORAGE_KEY, JSON.stringify(members));
     this.membersSubject.next(members);
   }
 
@@ -298,7 +340,7 @@ export class ReservationsService {
     let reservations = this.reservationsSubject.value;
 
     if (filter.status) {
-      reservations = reservations.filter((r) => r.status === filter.status);
+      reservations = reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === filter.status);
     }
 
     if (filter.spaceId) {
@@ -310,11 +352,13 @@ export class ReservationsService {
     }
 
     if (filter.dateFrom) {
-      reservations = reservations.filter((r) => r.reservationDate >= filter.dateFrom!);
+      const from = new Date(filter.dateFrom);
+      reservations = reservations.filter((r) => new Date(r.reservationDate) >= from);
     }
 
     if (filter.dateTo) {
-      reservations = reservations.filter((r) => r.reservationDate <= filter.dateTo!);
+      const to = new Date(filter.dateTo);
+      reservations = reservations.filter((r) => new Date(r.reservationDate) <= to);
     }
 
     return reservations;
@@ -332,19 +376,7 @@ export class ReservationsService {
       'id' | 'createdAt' | 'updatedAt' | 'space'
     >
   ): Reservation {
-    const newReservation: Reservation = {
-      ...reservationData,
-      id: this.generateId(),
-      space: this.spacesService.getSpaceById(reservationData.spaceId),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    const currentReservations = this.reservationsSubject.value;
-    const updatedReservations = [...currentReservations, newReservation];
-    this.saveReservations(updatedReservations);
-
-    return newReservation;
+    throw new Error('Local addReservation is deprecated. Use createReservation() to persist via API.');
   }
 
   // Mettre à jour le statut d'une réservation
@@ -353,53 +385,27 @@ export class ReservationsService {
     status: Reservation['status'],
     reason?: string
   ): Reservation | null {
-    const currentReservations = this.reservationsSubject.value;
-    const reservationIndex = currentReservations.findIndex((r) => r.id === id);
-
-    if (reservationIndex === -1) {
-      return null;
-    }
-
-    const updatedReservation: Reservation = {
-      ...currentReservations[reservationIndex],
-      status,
-      reason,
-      updatedAt: new Date(),
-    };
-
-    const updatedReservations = [...currentReservations];
-    updatedReservations[reservationIndex] = updatedReservation;
-    this.saveReservations(updatedReservations);
-
-    return updatedReservation;
+    throw new Error('Local updateReservationStatus is deprecated. Use acceptReservationApi/rejectReservationApi or API endpoints.');
   }
 
   // Accepter une réservation
   acceptReservation(id: string): Reservation | null {
-    return this.updateReservationStatus(id, 'confirmee');
+    throw new Error('Local acceptReservation is deprecated. Use acceptReservationApi() instead.');
   }
 
   // Rejeter une réservation
   rejectReservation(id: string, reason?: string): Reservation | null {
-    return this.updateReservationStatus(id, 'rejetee', reason);
+    throw new Error('Local rejectReservation is deprecated. Use rejectReservationApi() instead.');
   }
 
   // Annuler une réservation
   cancelReservation(id: string, reason?: string): Reservation | null {
-    return this.updateReservationStatus(id, 'annulee', reason);
+    throw new Error('Local cancelReservation is deprecated. Use API endpoint to cancel reservations.');
   }
 
   // Supprimer une réservation
   deleteReservation(id: string): boolean {
-    const currentReservations = this.reservationsSubject.value;
-    const filteredReservations = currentReservations.filter((r) => r.id !== id);
-
-    if (filteredReservations.length === currentReservations.length) {
-      return false; // Réservation non trouvée
-    }
-
-    this.saveReservations(filteredReservations);
-    return true;
+    throw new Error('Local deleteReservation is deprecated. Use API endpoint to delete reservations.');
   }
 
   // Obtenir les statistiques
@@ -407,10 +413,13 @@ export class ReservationsService {
     const reservations = this.reservationsSubject.value;
     return {
       total: reservations.length,
-      enAttente: reservations.filter((r) => r.status === 'en-attente').length,
-      confirmees: reservations.filter((r) => r.status === 'confirmee').length,
-      rejetees: reservations.filter((r) => r.status === 'rejetee').length,
-      annulees: reservations.filter((r) => r.status === 'annulee').length,
+      enAttente: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'en-attente').length,
+      confirmees: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'confirmee').length,
+      rejetees: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'rejetee').length,
+      annulees: reservations.filter((r) => {
+        const s = (r as any).status?.toString().toLowerCase();
+        return s === 'annulee' || s === 'cancelled' || s === 'cancel' || s === 'annule';
+      }).length,
     };
   }
 
@@ -451,12 +460,13 @@ export class ReservationsService {
 
   // Générer un ID unique
   private generateId(): string {
+    // ID generation is deprecated; IDs should come from the backend
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
   // Méthode pour vider toutes les réservations (utile pour les tests)
   clearAllReservations(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
+    // Clear in-memory reservations only
     this.reservationsSubject.next([]);
   }
 

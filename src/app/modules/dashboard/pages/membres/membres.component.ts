@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, CreateMemberData } from '../../../../core/services/members.service';
+import { ModalService } from '../../../../core/services/modal.service';
 
 @Component({
   selector: 'app-membres',
@@ -25,7 +26,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
         
         <button 
           (click)="showInviteModal = true"
-          class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+          class="inline-flex items-center gap-2 btn-primary px-4 py-2 rounded-lg hover:brightness-90 transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>
@@ -51,8 +52,8 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
 
         <div class="bg-white rounded-lg border border-gray-200 p-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
               </svg>
             </div>
@@ -104,7 +105,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
                 [(ngModel)]="searchTerm"
                 (ngModelChange)="onSearchChange()"
                 placeholder="Rechercher un membre..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
             </div>
           </div>
         </div>
@@ -225,7 +226,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
                 name="name"
                 required
                 placeholder="Marie Diallo"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
             </div>
 
             <!-- Email -->
@@ -237,7 +238,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
                 name="email"
                 required
                 placeholder="marie@example.com"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
             </div>
 
             <!-- Rôle -->
@@ -276,7 +277,7 @@ import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, C
               <button 
                 type="submit"
                 [disabled]="isInviting"
-                class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
+                class="flex-1 px-4 py-2 btn-primary text-white rounded-lg hover:brightness-90 disabled:opacity-50 transition-colors">
                 {{ isInviting ? 'Envoi...' : "Envoyer l'invitation" }}
               </button>
             </div>
@@ -322,7 +323,7 @@ export class MembresComponent implements OnInit {
     { key: 'staff', label: 'Staff', count: 0 }
   ];
 
-  constructor(private membersService: MembersService) {}
+  constructor(private membersService: MembersService, private modal: ModalService) {}
 
   ngOnInit(): void {
     this.loadMembers();
@@ -378,7 +379,7 @@ export class MembresComponent implements OnInit {
   getRoleFilterClass(roleKey: string | null): string {
     const baseClass = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors';
     if (roleKey === this.activeRoleFilter) {
-      return `${baseClass} bg-purple-600 text-white`;
+  return `${baseClass} btn-primary text-white`;
     }
     return `${baseClass} bg-gray-100 text-gray-700 hover:bg-gray-200`;
   }
@@ -388,7 +389,7 @@ export class MembresComponent implements OnInit {
     
     switch (member.role) {
       case 'proprietaire':
-        return `${baseClass} bg-purple-600`;
+  return `${baseClass} btn-primary`;
       case 'gestionnaire':
         return `${baseClass} bg-blue-600`;
       case 'staff':
@@ -403,7 +404,7 @@ export class MembresComponent implements OnInit {
     
     switch (role) {
       case 'proprietaire':
-        return `${baseClass} bg-purple-100 text-purple-800`;
+  return `${baseClass} bg-primary/10 text-primary`;
       case 'gestionnaire':
         return `${baseClass} bg-blue-100 text-blue-800`;
       case 'staff':
@@ -435,8 +436,14 @@ export class MembresComponent implements OnInit {
     this.activeMemberMenu = null;
   }
 
-  deleteMember(member: MemberProfile): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer ${member.name} ?`)) {
+  async deleteMember(member: MemberProfile): Promise<void> {
+    const ok = await this.modal.confirm({
+      title: 'Supprimer le membre',
+      message: `Êtes-vous sûr de vouloir supprimer ${member.name} ?`,
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler'
+    });
+    if (ok) {
       this.membersService.deleteMember(member.id);
     }
     this.activeMemberMenu = null;

@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { ApiService, ApiResponse } from './api.service';
 import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
 import { registerDto } from '../../../types/registerDto';
@@ -42,8 +42,7 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly API_URL =
-    environment.apiUrl + 'auth' || 'http://localhost:3000/api/v1/auth';
+  private readonly AUTH_ENDPOINT = '/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 
@@ -52,7 +51,7 @@ export class AuthService {
   public isAuthenticated$ = new BehaviorSubject<boolean>(false);
 
   constructor(
-    private http: HttpClient,
+    private api: ApiService,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
@@ -75,16 +74,14 @@ export class AuthService {
     return this.isAuthenticated$.value;
   }
 
-  signIn(credentials: SignInCredentials): Observable<AuthResponse> {
-    return this.http
-      .post<AuthResponse>(`${this.API_URL}/login`, credentials)
-      .pipe(
-        tap((response) => this.setAuthData(response)),
-        catchError((error) => throwError(() => error))
-      );
+  signIn(credentials: SignInCredentials): Observable<ApiResponse<{ user: User; token: string }>> {
+    return this.api.post<{ user: User; token: string }>(`${this.AUTH_ENDPOINT}/login`, credentials).pipe(
+      tap((response) => this.setAuthData({ success: response.success, message: response.message || '', data: response.data } as any)),
+      catchError((error) => throwError(() => error))
+    );
   }
 
-  signUp(formValue: any): Observable<AuthResponse> {
+  signUp(formValue: any): Observable<ApiResponse<{ user: User; token: string }>> {
     const userData: registerDto = {
       firstName: formValue.firstName,
       lastName: formValue.lastName,
@@ -92,17 +89,15 @@ export class AuthService {
       email: formValue.email,
       password: formValue.password,
     };
-    return this.http
-      .post<AuthResponse>(`${this.API_URL}/register`, userData)
-      .pipe(
-        tap((response) => this.setAuthData(response)),
-        catchError((error) => throwError(() => error))
-      );
+    return this.api.post<{ user: User; token: string }>(`${this.AUTH_ENDPOINT}/register`, userData).pipe(
+      tap((response) => this.setAuthData({ success: response.success, message: response.message || '', data: response.data } as any)),
+      catchError((error) => throwError(() => error))
+    );
   }
 
   signOut(): void {
     if (this.isBrowser) {
-      this.http.post(`${this.API_URL}/signout`, {}).subscribe();
+      this.api.post(`${this.AUTH_ENDPOINT}/signout`, {}).subscribe();
     }
 
     this.clearAuthData();
@@ -111,7 +106,7 @@ export class AuthService {
     }
   }
 
-  refreshToken(): Observable<AuthResponse> {
+  refreshToken(): Observable<ApiResponse<{ user: User; token: string }>> {
     if (!this.isBrowser)
       return throwError(() => new Error('Not available on server'));
 
@@ -120,15 +115,13 @@ export class AuthService {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    return this.http
-      .post<AuthResponse>(`${this.API_URL}/refresh`, { refreshToken })
-      .pipe(
-        tap((response) => this.setAuthData(response, true)),
-        catchError((error) => {
-          this.signOut();
-          return throwError(() => error);
-        })
-      );
+    return this.api.post<{ user: User; token: string }>(`${this.AUTH_ENDPOINT}/refresh`, { refreshToken }).pipe(
+      tap((response) => this.setAuthData({ success: response.success, message: response.message || '', data: response.data } as any, true)),
+      catchError((error) => {
+        this.signOut();
+        return throwError(() => error);
+      })
+    );
   }
 
   private setAuthData(response: AuthResponse, remember = false): void {

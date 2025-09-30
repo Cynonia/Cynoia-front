@@ -4,24 +4,18 @@ import { organisationDto } from '../../../types/organisationDto';
 import { AuthService } from './auth.service';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { BackendResponse } from '../../../types/backendResponse';
-import { environment } from '../../../environments/environment';
+import { ApiService, ApiResponse } from './api.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OrganisationService {
-  private readonly apiBaseUrl = environment.apiUrl || 'http://localhost:3000/api/v1/';
+  constructor(private api: ApiService, private authService: AuthService) {}
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
-
-  createOrganisation(payload: organisationDto):Observable<BackendResponse<organisationDto>> {
-    return this.http
-      .post<BackendResponse<organisationDto>>(this.apiBaseUrl + 'entities', payload, {
-        headers: { Authorization: 'Bearer ' + this.authService.token },
-      })
-      .pipe(
-        tap((response) => console.log(response)),
-        catchError((error) => throwError(() => error))
-      );
+  createOrganisation(payload: organisationDto): Observable<ApiResponse<organisationDto>> {
+    return this.api.post<organisationDto>('/entities', payload).pipe(
+      tap((response) => console.log(response)),
+      catchError((error) => throwError(() => error))
+    );
   }
 }

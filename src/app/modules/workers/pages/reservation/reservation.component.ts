@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SpacesService, Space } from '../../../../core/services/spaces.service';
 import { Espace } from '../../../../core/models/espace.model';
 import { EspaceService } from '../../../../core/services/espace.service';
+import { StoreService } from '../../../../core/services/store.service';
 
 interface ReservationFormData {
   spaceId: string;
@@ -66,7 +67,8 @@ export class ReservationComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private spacesService: EspaceService
+    private spacesService: EspaceService,
+    private store: StoreService
   ) {}
 
   ngOnInit(): void {
@@ -189,10 +191,8 @@ export class ReservationComponent implements OnInit {
           .filter((eq) => eq),
       };
 
-      localStorage.setItem(
-        'pendingReservation',
-        JSON.stringify(reservationData)
-      );
+      // Store pending reservation in StoreService (in-memory + optional sessionStorage)
+      this.store.savePendingReservation(reservationData, true);
       this.router.navigate(['/workers/paiement']);
     }
   }

@@ -42,6 +42,7 @@ export class BrandingService {
     this.authService.currentUser$.subscribe((user) => {
       this.currentUser = user;
       this.initializeOrganization(); // 🔁 Réinitialise le branding si l'utilisateur change
+      this.applyCssVariables();
     });
   }
 
@@ -107,5 +108,37 @@ export class BrandingService {
       --primary-color: ${branding.primaryColor};
       --secondary-color: ${branding.secondaryColor};
     `;
+  }
+
+  
+
+  // Compute whether white or black foreground is more readable on the primary color
+  private getContrastingForeground(hexColor: string): string {
+    // Normalize hex
+    const c = hexColor.replace('#', '');
+    const bigint = parseInt(c.length === 3 ? c.split('').map(ch => ch + ch).join('') : c, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    // Relative luminance
+    const [rs, gs, bs] = [r, g, b].map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    const luminance = 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+
+    // WCAG contrast threshold ~0.179 — pick white for dark backgrounds
+    return luminance > 0.179 ? '#111827' : '#ffffff';
+  }
+
+  applyCssVariables(): void {
+    if (typeof document === 'undefined') return;
+    const branding = this.getCurrentBranding();
+    const root = document.documentElement;
+    root.style.setProperty('--primary-color', branding.primaryColor || this.defaultBranding.primaryColor);
+    root.style.setProperty('--secondary-color', branding.secondaryColor || branding.primaryColor || this.defaultBranding.secondaryColor);
+    const fg = this.getContrastingForeground(branding.primaryColor || this.defaultBranding.primaryColor);
+    root.style.setProperty('--primary-foreground', fg);
   }
 }

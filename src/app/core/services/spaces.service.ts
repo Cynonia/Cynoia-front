@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, first } from 'rxjs';
+import { EspaceService } from './espace.service';
 
 export interface Space {
   id: string;
@@ -9,7 +10,7 @@ export interface Space {
   capacity: number;
   price: number; // Prix par jour en FCFA
   availability: string; // Horaires de disponibilité
-  status: 'disponible' | 'occupe' | 'maintenance';
+  status: true | false | 'maintenance';
   image?: string; // URL ou base64 de l'image
   features?: string[]; // Caractéristiques supplémentaires
   createdAt: Date;
@@ -18,7 +19,7 @@ export interface Space {
 
 export interface SpaceFilter {
   type: 'tous' | 'bureau' | 'salle' | 'equipement';
-  status?: 'disponible' | 'occupe' | 'maintenance';
+  status?: true | false | 'maintenance';
   search?: string;
 }
 
@@ -26,37 +27,33 @@ export interface SpaceFilter {
   providedIn: 'root'
 })
 export class SpacesService {
-  private readonly STORAGE_KEY = 'cynoia_spaces';
   private spacesSubject = new BehaviorSubject<Space[]>([]);
   public spaces$ = this.spacesSubject.asObservable();
 
-  constructor() {
-    this.loadSpaces();
+  constructor(private espaceApi: EspaceService) {
+    this.refreshFromApi();
   }
 
-  private loadSpaces(): void {
-    const savedSpaces = localStorage.getItem(this.STORAGE_KEY);
-    if (savedSpaces) {
-      try {
-        const spaces = JSON.parse(savedSpaces).map((space: any) => ({
-          ...space,
-          createdAt: new Date(space.createdAt),
-          updatedAt: new Date(space.updatedAt)
+  private refreshFromApi(): void {
+    // Prefer backend data via EspaceService (ApiService)
+    this.espaceApi.getAll().pipe(first()).subscribe({
+      next: (res) => {
+        const items = (res.data || []).map((s: any) => ({
+          ...s,
+          createdAt: new Date(s.createdAt),
+          updatedAt: new Date(s.updatedAt)
         }));
-        this.spacesSubject.next(spaces);
-      } catch (error) {
-        console.error('Erreur lors du chargement des espaces:', error);
+        this.spacesSubject.next(items);
+      },
+      error: (err) => {
+        console.warn('Unable to fetch spaces from API, leaving empty list:', err);
         this.spacesSubject.next([]);
       }
-    } else {
-      // Données d'exemple pour la première utilisation
-      this.initializeWithSampleData();
-    }
+    });
   }
 
-  private saveSpaces(spaces: Space[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(spaces));
-    this.spacesSubject.next(spaces);
+  private saveSpaces(_: Space[]): void {
+    throw new Error('Local persistence of spaces is deprecated. Use EspaceService.create/update/delete for server-side operations.');
   }
 
   private initializeWithSampleData(): void {
@@ -69,7 +66,7 @@ export class SpacesService {
         capacity: 2,
         price: 15000,
         availability: '8h-18h',
-        status: 'disponible',
+        status: true,
         features: ['Wi-Fi', 'Climatisation', 'Vue sur la ville'],
         createdAt: new Date(),
         updatedAt: new Date()
@@ -82,7 +79,7 @@ export class SpacesService {
         capacity: 8,
         price: 25000,
         availability: '8h-20h',
-        status: 'disponible',
+        status: true,
         features: ['Projecteur', 'Tableau blanc', 'Vidéoconférence'],
         createdAt: new Date(),
         updatedAt: new Date()
@@ -95,13 +92,13 @@ export class SpacesService {
         capacity: 1,
         price: 5000,
         availability: '8h-18h',
-        status: 'disponible',
+        status: true,
         features: ['HD 1080p', 'Portable', 'HDMI/USB'],
         createdAt: new Date(),
         updatedAt: new Date()
       }
     ];
-    this.saveSpaces(sampleSpaces);
+    // Sample initialization removed. Use API to seed data.
   }
 
   // Obtenir tous les espaces
@@ -142,53 +139,17 @@ export class SpacesService {
 
   // Ajouter un nouvel espace
   addSpace(spaceData: Omit<Space, 'id' | 'createdAt' | 'updatedAt'>): Space {
-    const newSpace: Space = {
-      ...spaceData,
-      id: this.generateId(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    const currentSpaces = this.spacesSubject.value;
-    const updatedSpaces = [...currentSpaces, newSpace];
-    this.saveSpaces(updatedSpaces);
-    
-    return newSpace;
+    throw new Error('Local addSpace deprecated. Use EspaceService.create() to create spaces on the server.');
   }
 
   // Mettre à jour un espace
   updateSpace(id: string, updates: Partial<Omit<Space, 'id' | 'createdAt'>>): Space | null {
-    const currentSpaces = this.spacesSubject.value;
-    const spaceIndex = currentSpaces.findIndex(space => space.id === id);
-    
-    if (spaceIndex === -1) {
-      return null;
-    }
-
-    const updatedSpace: Space = {
-      ...currentSpaces[spaceIndex],
-      ...updates,
-      updatedAt: new Date()
-    };
-
-    const updatedSpaces = [...currentSpaces];
-    updatedSpaces[spaceIndex] = updatedSpace;
-    this.saveSpaces(updatedSpaces);
-    
-    return updatedSpace;
+    throw new Error('Local updateSpace deprecated. Use EspaceService.update() to update spaces on the server.');
   }
 
   // Supprimer un espace
   deleteSpace(id: string): boolean {
-    const currentSpaces = this.spacesSubject.value;
-    const filteredSpaces = currentSpaces.filter(space => space.id !== id);
-    
-    if (filteredSpaces.length === currentSpaces.length) {
-      return false; // Espace non trouvé
-    }
-
-    this.saveSpaces(filteredSpaces);
-    return true;
+    throw new Error('Local deleteSpace deprecated. Use EspaceService.delete() to delete spaces on the server.');
   }
 
   // Obtenir les statistiques
@@ -196,8 +157,8 @@ export class SpacesService {
     const spaces = this.spacesSubject.value;
     return {
       total: spaces.length,
-      available: spaces.filter(s => s.status === 'disponible').length,
-      occupied: spaces.filter(s => s.status === 'occupe').length,
+      available: spaces.filter(s => s.status === true).length,
+      occupied: spaces.filter(s => s.status === false).length,
       maintenance: spaces.filter(s => s.status === 'maintenance').length,
       byType: {
         bureau: spaces.filter(s => s.type === 'bureau').length,
@@ -214,7 +175,7 @@ export class SpacesService {
 
   // Méthode pour vider tous les espaces (utile pour les tests)
   clearAllSpaces(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
+    // Clear in-memory only
     this.spacesSubject.next([]);
   }
 }

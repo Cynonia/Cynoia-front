@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry, tap } from 'rxjs/operators';
-import { AuthService } from './auth.service';
 import { StoreService } from './store.service';
+import { environment } from '../../../environments/environment';
 
 export interface ApiResponse<T = any> {
   data: T;
@@ -16,16 +16,25 @@ export interface ApiResponse<T = any> {
   providedIn: 'root'
 })
 export class ApiService {
-  private readonly baseUrl = "";
+  // Normalize base url (ensure no trailing slash)
+  private readonly baseUrl = (environment.apiUrl || 'http://localhost:3000/api/v1').replace(/\/$/, '');
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService,
     private store: StoreService
   ) {}
 
+  // Read token directly from storage to avoid direct dependency on AuthService and prevent circular DI
+  private get token(): string | null {
+    try {
+      return localStorage.getItem('token') || sessionStorage.getItem('token') || null;
+    } catch {
+      return null;
+    }
+  }
+
   private getHeaders(): HttpHeaders {
-    const token = this.authService.token;
+  const token = this.token;
     return new HttpHeaders({
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` })
@@ -42,7 +51,8 @@ export class ApiService {
       });
     }
 
-    return this.http.get<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, {
+    const fullUrl = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    return this.http.get<ApiResponse<T>>(fullUrl, {
       headers: this.getHeaders(),
       params: httpParams
     }).pipe(
@@ -52,7 +62,8 @@ export class ApiService {
   }
 
   post<T>(endpoint: string, data: any): Observable<ApiResponse<T>> {
-    return this.http.post<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, data, {
+    const fullUrl = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    return this.http.post<ApiResponse<T>>(fullUrl, data, {
       headers: this.getHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -60,7 +71,8 @@ export class ApiService {
   }
 
   put<T>(endpoint: string, data: any): Observable<ApiResponse<T>> {
-    return this.http.put<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, data, {
+    const fullUrl = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    return this.http.put<ApiResponse<T>>(fullUrl, data, {
       headers: this.getHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -68,7 +80,8 @@ export class ApiService {
   }
 
   delete<T>(endpoint: string): Observable<ApiResponse<T>> {
-    return this.http.delete<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, {
+    const fullUrl = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    return this.http.delete<ApiResponse<T>>(fullUrl, {
       headers: this.getHeaders()
     }).pipe(
       catchError(this.handleError)
@@ -85,11 +98,13 @@ export class ApiService {
       });
     }
 
+    const token = this.token;
     const headers = new HttpHeaders({
-      ...(this.authService.token && { 'Authorization': `Bearer ${this.authService.token}` })
+      ...(token && { 'Authorization': `Bearer ${token}` })
     });
 
-    return this.http.post<ApiResponse<T>>(`${this.baseUrl}/${endpoint}`, formData, {
+    const fullUrl = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    return this.http.post<ApiResponse<T>>(fullUrl, formData, {
       headers
     }).pipe(
       catchError(this.handleError)

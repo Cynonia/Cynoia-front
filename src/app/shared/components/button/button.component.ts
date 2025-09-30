@@ -35,9 +35,9 @@ export class ButtonComponent {
     const baseClasses = 'inline-flex justify-center items-center font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed';
     
     const variantClasses = {
-      primary: 'text-white bg-purple-600 hover:from-purple-700 hover:to-blue-700 focus:ring-purple-500 shadow-lg',
-      secondary: 'border border-white/20 shadow-sm bg-white/10 text-slate-200 hover:bg-white/20 focus:ring-purple-500',
-      outline: 'border border-gray/20 text-slate-800 hover:bg-white/10 focus:ring-transparent'
+      primary: 'btn-primary shadow-lg hover:brightness-90',
+      secondary: 'border border-white/20 shadow-sm bg-white/10 text-slate-200 hover:bg-white/20 focus-ring-primary',
+      outline: 'border border-gray/20 text-slate-800 hover:bg-white/10 focus-ring-primary'
     };
 
     const sizeClasses = {

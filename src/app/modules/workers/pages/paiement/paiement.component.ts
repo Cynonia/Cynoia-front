@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { start } from 'node:repl';
 import { ReservationsService } from '../../../../core/services';
+import { StoreService } from '../../../../core/services/store.service';
 
 interface PaymentMethod {
   id: string;
@@ -280,17 +280,18 @@ export class PaiementComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router, private reservationsService: ReservationsService) {}
+  constructor(
+    private router: Router,
+    private reservationsService: ReservationsService,
+    private store: StoreService
+  ) {}
 
   ngOnInit(): void {
     this.loadReservationData();
   }
 
   private loadReservationData(): void {
-    const savedData = localStorage.getItem('pendingReservation');
-    if (savedData) {
-      this.reservationData = JSON.parse(savedData);
-    }
+    this.reservationData = this.store.getPendingReservation();
   }
 
   goBack(): void {
@@ -393,15 +394,13 @@ export class PaiementComponent implements OnInit {
         paymentMethod: this.selectedPaymentMethod,
         paymentData: { ...this.paymentData },
         paymentId: 'PAY_' + Date.now(),
-        status: 'confirmed',
+        status: 'confirmee',
         paidAt: new Date()
       };
 
-      // Sauvegarder la confirmation
-      localStorage.setItem('reservationConfirmation', JSON.stringify(confirmationData));
-      
-      // Nettoyer les données temporaires
-      localStorage.removeItem('pendingReservation');
+  // Save confirmation and clear pending reservation via StoreService
+  this.store.savePendingReservation(confirmationData, true);
+  this.store.clearPendingReservation();
 
       // Rediriger vers la page de confirmation
       this.router.navigate(['/workers/confirmation']);

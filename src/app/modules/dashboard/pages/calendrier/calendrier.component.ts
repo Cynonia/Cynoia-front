@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { CalendarService, CalendarView, CalendarDay, CalendarWeek, TimeSlot, CalendarEvent } from '../../../../core/services/calendar.service';
 import { Space } from '../../../../core/services/spaces.service';
+import { ReservationsService } from '../../../../core/services';
 
 @Component({
   selector: 'app-calendrier',
@@ -299,7 +302,7 @@ import { Space } from '../../../../core/services/spaces.service';
     </div>
   `
 })
-export class CalendrierComponent implements OnInit {
+export class CalendrierComponent implements OnInit, OnDestroy {
   currentView: CalendarView = 'month';
   currentDate: Date = new Date();
   selectedSpaceId: string | null = null;
@@ -322,12 +325,25 @@ export class CalendrierComponent implements OnInit {
     { key: 'day' as CalendarView, label: 'Jour' }
   ];
 
-  constructor(private calendarService: CalendarService) {}
+  private destroy$ = new Subject<void>();
+
+  constructor(private calendarService: CalendarService, private reservationService: ReservationsService) {}
 
   ngOnInit(): void {
     this.subscribeToCalendar();
     this.loadAvailableSpaces();
     this.loadCalendarData();
+    // Ensure reservations are fetched from API for this entity
+    try {
+      this.reservationService.refreshFromApi();
+    } catch (e) {
+      // refreshFromApi may already be called in the service constructor; ignore errors
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private subscribeToCalendar(): void {
@@ -348,6 +364,11 @@ export class CalendrierComponent implements OnInit {
 
     this.calendarService.selectedDate$.subscribe(date => {
       this.selectedDate = date;
+    });
+
+    // Refresh calendar whenever reservations change
+    this.reservationService.reservations$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadCalendarData();
     });
   }
 

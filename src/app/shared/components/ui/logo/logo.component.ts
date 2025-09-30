@@ -4,9 +4,10 @@ import { Component, Input } from "@angular/core";
 @Component({
   selector: 'ui-logo',
   standalone: true,
+  imports: [CommonModule],
   template: `
     <div class="text-center">
-      <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl shadow-lg mb-6">
+  <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl shadow-lg mb-6" [style.background]="'linear-gradient(135deg, var(--primary-color), rgba(0,0,0,0.08))'">
         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
         </svg>

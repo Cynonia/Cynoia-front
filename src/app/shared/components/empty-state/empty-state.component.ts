@@ -20,7 +20,7 @@ import { CommonModule } from '@angular/common';
         <button 
           *ngIf="buttonText"
           (click)="onButtonClick()"
-          class="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors">
+          class="inline-flex items-center gap-2 btn-primary px-6 py-3 rounded-lg transition-colors">
           <svg *ngIf="showIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
           </svg>

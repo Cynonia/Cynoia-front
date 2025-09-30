@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
@@ -6,6 +6,8 @@ import {
   ReservationStats,
 } from '../../../../core/services/reservations.service';
 import { SpacesService } from '../../../../core/services/spaces.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -48,22 +50,37 @@ import { SpacesService } from '../../../../core/services/spaces.service';
       </div>
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <!-- En attente -->
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div
+                class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
             </div>
             <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">Réservations en attente</h3>
+              <h3 class="text-lg font-medium text-gray-700">
+                Réservations en attente
+              </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">{{ stats.enAttente }}</p>
+                <p class="text-3xl font-bold text-gray-900">
+                  {{ stats.enAttente }}
+                </p>
                 <p class="text-sm text-gray-500 ml-2">À valider</p>
               </div>
             </div>
@@ -74,18 +91,66 @@ import { SpacesService } from '../../../../core/services/spaces.service';
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div
+                class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
             </div>
             <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">Réservations confirmées</h3>
+              <h3 class="text-lg font-medium text-gray-700">
+                Réservations confirmées
+              </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">{{ stats.confirmees }}</p>
-                <p class="text-sm text-gray-500 ml-2">Cette semaine</p>
+                <p class="text-3xl font-bold text-gray-900">
+                  {{ stats.confirmees }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div
+                class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h3 class="text-lg font-medium text-gray-700">
+                Réservations annulées
+              </h3>
+              <div class="flex items-baseline">
+                <p class="text-3xl font-bold text-gray-900">
+                  {{ stats.annulees }}
+                </p>
               </div>
             </div>
           </div>
@@ -95,17 +160,32 @@ import { SpacesService } from '../../../../core/services/spaces.service';
         <div class="bg-white p-6 rounded-lg border border-gray-200">
           <div class="flex items-center">
             <div class="flex-shrink-0">
-              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              <div
+                class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
+              >
+                <svg
+                  class="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
                 </svg>
               </div>
             </div>
             <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">Espaces disponibles</h3>
+              <h3 class="text-lg font-medium text-gray-700">
+                Espaces disponibles
+              </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">{{ availableSpacesCount }}</p>
+                <p class="text-3xl font-bold text-gray-900">
+                  {{ availableSpacesCount }}
+                </p>
                 <p class="text-sm text-gray-500 ml-2">Espaces actifs</p>
               </div>
             </div>
@@ -115,49 +195,68 @@ import { SpacesService } from '../../../../core/services/spaces.service';
 
       <!-- Réservations récentes -->
       <div class="bg-white rounded-lg border border-gray-200">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 class="text-lg font-semibold text-gray-900">Réservations récentes</h3>
-          <a routerLink="/dashboard/reservations" class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+        <div
+          class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+        >
+          <h3 class="text-lg font-semibold text-gray-900">
+            Réservations récentes
+          </h3>
+          <a
+            routerLink="/dashboard/reservations"
+            class="text-sm text-purple-600 hover:text-purple-700 font-medium"
+          >
             Voir tout
           </a>
         </div>
         <div class="p-6">
           <div *ngIf="recentReservations.length === 0" class="text-center py-8">
-            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <svg
+              class="w-12 h-12 text-gray-400 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             <p class="text-gray-600">Aucune réservation récente</p>
           </div>
 
           <div *ngIf="recentReservations.length > 0" class="space-y-4">
-            <div *ngFor="let reservation of recentReservations"
-              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div
+              *ngFor="let reservation of recentReservations"
+              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
               <div class="flex-1">
                 <h4 class="font-medium text-gray-900">
                   {{ reservation.espace.name }}
                 </h4>
                 <div class="flex items-center text-sm text-gray-500 mt-1">
-                  <span>{{ (reservation.user?.firstName + " " + reservation.user?.lastName ) || 'Membre inconnu' }}</span>
+                  <span>{{
+                    reservation.user?.firstName +
+                      ' ' +
+                      reservation.user?.lastName || 'Membre inconnu'
+                  }}</span>
                   <span class="mx-2">•</span>
                   <span>{{ formatDate(reservation.startAt) }}</span>
                   <span class="mx-2">•</span>
-                  <span>{{ formatTime(reservation.startAt) }} - {{ formatTime(reservation.endAt) }}</span>
+                  <span
+                    >{{ formatTime(reservation.startAt) }} -
+                    {{ formatTime(reservation.endAt) }}</span
+                  >
                 </div>
               </div>
               <div class="flex items-center gap-3">
-                <span [class]="getStatusBadgeClass(reservation.status)"
-                  class="px-3 py-1 text-xs font-medium rounded-full">
+                <span
+                  [class]="getStatusBadgeClass(reservation.status)"
+                  class="px-3 py-1 text-xs font-medium rounded-full"
+                >
                   {{ getStatusLabel(reservation.status) }}
                 </span>
-                <button *ngIf="reservation.status === 'en-attente'" (click)="rejectReservation(reservation.id)"
-                  class="px-3 py-1 text-xs font-medium bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                  Rejeté
-                </button>
-                <button *ngIf="reservation.status === 'en-attente'" (click)="approveReservation(reservation.id)"
-                  class="px-3 py-1 text-xs font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                  Confirmé
-                </button>
               </div>
             </div>
           </div>
@@ -166,7 +265,7 @@ import { SpacesService } from '../../../../core/services/spaces.service';
     </div>
   `,
 })
-export class DashboardHomeComponent implements OnInit {
+export class DashboardHomeComponent implements OnInit, OnDestroy {
   stats: ReservationStats = {
     total: 0,
     enAttente: 0,
@@ -178,6 +277,7 @@ export class DashboardHomeComponent implements OnInit {
   recentReservations: any[] = [];
   availableSpacesCount = 0;
   isLoading = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private reservationsService: ReservationsService,
@@ -186,6 +286,15 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboardData();
+    // Listen for spaces from the SpacesService (API-backed) and update the count
+    this.spacesService.spaces$.pipe(takeUntil(this.destroy$)).subscribe((spaces) => {
+      this.availableSpacesCount = (spaces || []).filter((s) => s.status === true).length;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadDashboardData(): void {
@@ -199,11 +308,56 @@ export class DashboardHomeComponent implements OnInit {
 
         this.recentReservations = reservations
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-          .slice(0, 5);
+          .slice(0, 5)
+          .map((r: any) => {
+            // Base date
+            const baseDate = r.reservationDate
+              ? new Date(r.reservationDate)
+              : new Date();
+
+            // Parse start time
+            let startAt = new Date(baseDate);
+            let endAt = new Date(baseDate);
+            try {
+              if (r.startTime) {
+                const s = r.startTime.toString().split(':').map(Number);
+                if (!isNaN(s[0]))
+                  startAt.setHours(s[0], isNaN(s[1]) ? 0 : s[1], 0, 0);
+              }
+
+              if (r.endTime) {
+                const e = r.endTime.toString().split(':').map(Number);
+                if (!isNaN(e[0]))
+                  endAt.setHours(e[0], isNaN(e[1]) ? 0 : e[1], 0, 0);
+              }
+
+              // If endAt is not after startAt, derive from duration or default to +1h
+              if (!r.endTime || endAt <= startAt) {
+                if (typeof r.duration === 'number' && r.duration > 0) {
+                  endAt = new Date(
+                    startAt.getTime() + r.duration * 60 * 60 * 1000
+                  );
+                } else {
+                  endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+                }
+              }
+            } catch (err) {
+              // fallback to sensible defaults
+              startAt = new Date(baseDate);
+              startAt.setHours(9, 0, 0, 0);
+              endAt = new Date(startAt.getTime() + 60 * 60 * 1000);
+            }
+
+            return {
+              ...r,
+              startAt,
+              endAt,
+            };
+          });
 
         this.availableSpacesCount = this.spacesService
           .getAllSpaces()
-          .filter((space) => space.status === 'disponible').length;
+          .filter((space) => space.status === true).length;
 
         this.isLoading = false;
       },
@@ -217,15 +371,36 @@ export class DashboardHomeComponent implements OnInit {
   private calculateStats(reservations: any[]): ReservationStats {
     return {
       total: reservations.length,
-      enAttente: reservations.filter((r) => r.status === 'en-attente').length,
-      confirmees: reservations.filter((r) => r.status === 'confirmee').length,
-      rejetees: reservations.filter((r) => r.status === 'rejetee').length,
-      annulees: reservations.filter((r) => r.status === 'annulee').length,
+      enAttente: reservations.filter(
+        (r) =>
+          ReservationsService.normalizeReservationStatus(r.status) ===
+          'en-attente'
+      ).length,
+      confirmees: reservations.filter(
+        (r) =>
+          ReservationsService.normalizeReservationStatus(r.status) ===
+          'confirmee'
+      ).length,
+      rejetees: reservations.filter(
+        (r) =>
+          ReservationsService.normalizeReservationStatus(r.status) === 'rejetee'
+      ).length,
+      annulees: reservations.filter((r) => {
+        const s = (r as any).status?.toString().toLowerCase();
+        return (
+          s === 'annulee' ||
+          s === 'cancelled' ||
+          s === 'cancel' ||
+          s === 'annule'
+        );
+      }).length,
     };
   }
 
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
+  formatDate(dateInput: string | Date): string {
+    const date =
+      dateInput instanceof Date ? dateInput : new Date(dateInput || '');
+    if (isNaN(date.getTime())) return 'Date invalide';
     return date.toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: '2-digit',
@@ -233,8 +408,10 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
-  formatTime(dateString: string): string {
-    const date = new Date(dateString);
+  formatTime(dateInput: string | Date): string {
+    const date =
+      dateInput instanceof Date ? dateInput : new Date(dateInput || '');
+    if (isNaN(date.getTime())) return '—';
     return date.toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit',
@@ -242,42 +419,57 @@ export class DashboardHomeComponent implements OnInit {
   }
 
   getStatusLabel(status: string): string {
-    switch (status) {
+    const s = ReservationsService.normalizeReservationStatus(status);
+    switch (s) {
       case 'en-attente':
         return 'En attente';
       case 'confirmee':
         return 'Confirmé';
       case 'rejetee':
         return 'Rejeté';
-      case 'annulee':
-        return 'Annulé';
+      case 'en-cours':
+        return 'En cours';
       default:
         return status;
     }
   }
 
   getStatusBadgeClass(status: string): string {
-    switch (status) {
+    const s = ReservationsService.normalizeReservationStatus(status);
+    switch (s) {
       case 'en-attente':
         return 'bg-yellow-100 text-yellow-800';
       case 'confirmee':
         return 'bg-green-100 text-green-800';
       case 'rejetee':
         return 'bg-red-100 text-red-800';
-      case 'annulee':
-        return 'bg-gray-100 text-gray-800';
+      case 'en-cours':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   }
 
   approveReservation(reservationId: string): void {
-    this.reservationsService.updateReservationStatus(reservationId, 'confirmee');
-    this.loadDashboardData();
+    this.reservationsService.acceptReservationApi(reservationId).subscribe({
+      next: (res) => {
+        // reload dashboard data from server
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        console.error("Erreur lors de l'acceptation de la réservation :", err);
+      },
+    });
   }
 
   rejectReservation(reservationId: string): void {
-    this.reservationsService.updateReservationStatus(reservationId, 'rejetee');
-    this.loadDashboardData();
+    this.reservationsService.rejectReservationApi(reservationId).subscribe({
+      next: (res) => {
+        this.loadDashboardData();
+      },
+      error: (err) => {
+        console.error('Erreur lors du rejet de la réservation :', err);
+      },
+    });
   }
 }

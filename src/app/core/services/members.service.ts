@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, first } from 'rxjs';
+import { ApiService } from './api.service';
 
 export type MemberRole = 'proprietaire' | 'gestionnaire' | 'membre' | 'staff';
 export type MemberStatus = 'actif' | 'inactif' | 'en-attente';
@@ -47,27 +48,26 @@ export class MembersService {
   private membersSubject = new BehaviorSubject<MemberProfile[]>([]);
   public members$ = this.membersSubject.asObservable();
 
-  constructor() {
-    this.loadMembers();
+  constructor(private api: ApiService) {
+    this.refreshFromApi();
   }
 
-  private loadMembers(): void {
-    const savedMembers = localStorage.getItem(this.STORAGE_KEY);
-    if (savedMembers) {
-      try {
-        const members = JSON.parse(savedMembers).map((member: any) => ({
-          ...member,
-          joinedAt: new Date(member.joinedAt),
-          lastActivity: member.lastActivity ? new Date(member.lastActivity) : undefined
+  private refreshFromApi(): void {
+    this.api.get<MemberProfile[]>('/members').pipe(first()).subscribe({
+      next: (res) => {
+        const members = (res.data || []).map((m: any) => ({
+          ...m,
+          joinedAt: new Date(m.joinedAt),
+          lastActivity: m.lastActivity ? new Date(m.lastActivity) : undefined,
+          initials: m.initials || this.generateInitials(m.name || '')
         }));
         this.membersSubject.next(members);
-      } catch (error) {
-        console.error('Erreur lors du chargement des membres:', error);
+      },
+      error: (err) => {
+        console.warn('Unable to fetch members from API, falling back to sample data:', err);
         this.initializeWithSampleData();
       }
-    } else {
-      this.initializeWithSampleData();
-    }
+    });
   }
 
   private initializeWithSampleData(): void {
@@ -127,7 +127,7 @@ export class MembersService {
   }
 
   private saveMembers(members: MemberProfile[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(members));
+    // Local persistence removed; update in-memory subject only
     this.membersSubject.next(members);
   }
 
@@ -186,57 +186,17 @@ export class MembersService {
 
   // Créer un nouveau membre
   createMember(memberData: CreateMemberData): MemberProfile {
-    const newMember: MemberProfile = {
-      id: this.generateId(),
-      name: memberData.name,
-      email: memberData.email,
-      role: memberData.role,
-      status: 'en-attente',
-      joinedAt: new Date(),
-      initials: this.generateInitials(memberData.name)
-    };
-
-    const currentMembers = this.membersSubject.value;
-    const updatedMembers = [...currentMembers, newMember];
-    this.saveMembers(updatedMembers);
-    
-    return newMember;
+    throw new Error('Local createMember is deprecated. Use API endpoints to create members.');
   }
 
   // Mettre à jour un membre
   updateMember(id: string, updates: Partial<MemberProfile>): MemberProfile | null {
-    const currentMembers = this.membersSubject.value;
-    const memberIndex = currentMembers.findIndex(m => m.id === id);
-    
-    if (memberIndex === -1) {
-      return null;
-    }
-
-    const updatedMember: MemberProfile = {
-      ...currentMembers[memberIndex],
-      ...updates
-    };
-
-    const updatedMembers = [...currentMembers];
-    updatedMembers[memberIndex] = updatedMember;
-    this.saveMembers(updatedMembers);
-    
-    return updatedMember;
+    throw new Error('Local updateMember is deprecated. Use API endpoints to update members.');
   }
 
   // Supprimer un membre
   deleteMember(id: string): boolean {
-    const currentMembers = this.membersSubject.value;
-    const memberIndex = currentMembers.findIndex(m => m.id === id);
-    
-    if (memberIndex === -1) {
-      return false;
-    }
-
-    const updatedMembers = currentMembers.filter(m => m.id !== id);
-    this.saveMembers(updatedMembers);
-    
-    return true;
+    throw new Error('Local deleteMember is deprecated. Use API endpoints to delete members.');
   }
 
   // Changer le rôle d'un membre
@@ -332,7 +292,6 @@ export class MembersService {
 
   // Méthode pour vider tous les membres (utile pour les tests)
   clearAllMembers(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
     this.membersSubject.next([]);
   }
 }
