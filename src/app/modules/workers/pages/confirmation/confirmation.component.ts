@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { StoreService } from '../../../../core/services/store.service';
 
 @Component({
   selector: 'app-confirmation',
@@ -158,17 +159,14 @@ import { Router } from '@angular/router';
 export class ConfirmationComponent implements OnInit {
   confirmationData: any = null;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private store: StoreService) {}
 
   ngOnInit(): void {
     this.loadConfirmationData();
   }
 
   private loadConfirmationData(): void {
-    const savedData = localStorage.getItem('reservationConfirmation');
-    if (savedData) {
-      this.confirmationData = JSON.parse(savedData);
-    }
+    this.confirmationData = this.store.getPendingReservation();
   }
 
   formatDate(dateString: string): string {

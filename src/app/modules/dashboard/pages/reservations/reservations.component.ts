@@ -1,12 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+
 import { ReservationsService, Reservation, ReservationStats } from '../../../../core/services/reservations.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { ModalService } from '../../../../core/services/modal.service';
+import { Subject } from 'rxjs';
+import { takeUntil, first } from 'rxjs/operators';
+
 
 @Component({
   selector: 'app-reservations',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-6">
       <!-- Header -->
@@ -73,8 +80,8 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
             </div>
             
             <div class="space-y-4">
-              <div *ngFor="let reservation of pendingReservations" 
-                   class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div *ngFor="let reservation of pendingReservations; trackBy: trackByReservation" 
+          class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                 <!-- Header avec l'espace et statut -->
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
@@ -169,8 +176,8 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
             </div>
             
             <div class="space-y-4">
-              <div *ngFor="let reservation of confirmedReservations" 
-                   class="bg-white border border-gray-200 rounded-lg p-6">
+        <div *ngFor="let reservation of confirmedReservations; trackBy: trackByReservation" 
+          class="bg-white border border-gray-200 rounded-lg p-6">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -244,8 +251,8 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
             </div>
             
             <div class="space-y-4">
-              <div *ngFor="let reservation of rejectedReservations" 
-                   class="bg-white border border-gray-200 rounded-lg p-6">
+        <div *ngFor="let reservation of rejectedReservations; trackBy: trackByReservation" 
+          class="bg-white border border-gray-200 rounded-lg p-6">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -334,7 +341,7 @@ import { ReservationsService, Reservation, ReservationStats } from '../../../../
     </div>
   `,
 })
-export class ReservationsComponent implements OnInit {
+export class ReservationsComponent implements OnInit, OnDestroy {
   activeTab: 'en-attente' | 'confirmees' | 'rejetees' = 'en-attente';
 
   allReservations: Reservation[] = [];
@@ -356,28 +363,32 @@ export class ReservationsComponent implements OnInit {
     { key: 'rejetees' as const, label: 'Rejetées', count: 0 }
   ];
 
-  constructor(
-    private reservationsService: ReservationsService,
-    private router: Router
-  ) {}
+  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    this.reservationsService.getReservations().subscribe(reservations => {
+    this.reservationsService.getReservations().pipe(takeUntil(this.destroy$)).subscribe(reservations => {
       this.allReservations = reservations;
 
-      this.pendingReservations = reservations.filter(r => r.status === 'en-attente');
-      this.confirmedReservations = reservations.filter(r => r.status === 'confirmee');
-      this.rejectedReservations = reservations.filter(r => r.status === 'rejetee');
+      this.pendingReservations = reservations.filter(r => {
+        const s = ReservationsService.normalizeReservationStatus(r.status);
+        return s === 'en-attente' || s === 'en-cours';
+      });
+      this.confirmedReservations = reservations.filter(r => ReservationsService.normalizeReservationStatus(r.status) === 'confirmee');
+      this.rejectedReservations = reservations.filter(r => ReservationsService.normalizeReservationStatus(r.status) === 'rejetee');
 
       this.stats = {
         total: reservations.length,
         enAttente: this.pendingReservations.length,
         confirmees: this.confirmedReservations.length,
         rejetees: this.rejectedReservations.length,
-        annulees: reservations.filter(r => r.status === 'annulee').length
+        annulees: reservations.filter(r => {
+          const s = (r as any).status?.toString().toLowerCase();
+          return s === 'annulee' || s === 'cancelled' || s === 'cancel' || s === 'annule';
+        }).length
       };
 
       this.updateTabCounts();
+      this.cdr.markForCheck();
     });
   }
 
@@ -412,17 +423,93 @@ export class ReservationsComponent implements OnInit {
     }
   }
 
-  acceptReservation(reservation: Reservation): void {
-    if (confirm(`Confirmer la réservation de ${reservation.member.name} pour ${reservation.space?.name} ?`)) {
-      const result = this.reservationsService.acceptReservation(reservation.id);
+  constructor(
+    private reservationsService: ReservationsService,
+    private router: Router,
+    private toast: ToastService,
+    @Inject(ModalService) private modal: ModalService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  async acceptReservation(reservation: Reservation): Promise<void> {
+    const ok = await this.modal.confirm({
+      title: 'Confirmer la réservation',
+      message: `Confirmer la réservation de ${reservation.user?.firstName || 'membre'} pour ${reservation.espace?.name || reservation.space?.name || ''} ?`,
+      confirmText: 'Accepter',
+      cancelText: 'Annuler'
+    });
+    if (!ok) return;
+    try {
+      this.reservationsService.acceptReservationApi(reservation.id).subscribe({
+        next: () => {
+          // Refresh local view from server to keep UI consistent
+          this.refreshLocalReservations();
+          this.toast.success('Réservation acceptée', 'Succès');
+        },
+        error: (err: any) => {
+          console.error(err);
+          this.toast.error('Impossible d\'accepter la réservation');
+        }
+      });
+    } catch (err: any) {
+      console.error(err);
+      this.toast.error('Erreur serveur');
     }
   }
 
-  rejectReservation(reservation: Reservation): void {
-    const reason = prompt('Raison du rejet (optionnel):');
-    if (reason !== null) {
-      const result = this.reservationsService.rejectReservation(reservation.id, reason || undefined);
+  async rejectReservation(reservation: Reservation): Promise<void> {
+    const reason = await this.modal.prompt({
+      title: 'Raison du rejet',
+      message: 'Raison du rejet (optionnel):',
+      placeholder: 'Motif du rejet...',
+      confirmText: 'Envoyer',
+      cancelText: 'Annuler'
+    });
+    if (reason === null) return;
+    try {
+      this.reservationsService.rejectReservationApi(reservation.id, reason).subscribe({
+        next: () => {
+          this.refreshLocalReservations();
+          this.toast.info('Réservation rejetée', 'Information');
+        },
+        error: (err: any) => {
+          console.error(err);
+          this.toast.error('Impossible de rejeter la réservation');
+        }
+      });
+    } catch (err: any) {
+      console.error(err);
+      this.toast.error('Erreur serveur');
     }
+  }
+
+  private refreshLocalReservations(): void {
+    this.reservationsService.getReservations().pipe(first()).subscribe({
+      next: (reservations) => {
+        this.allReservations = reservations;
+
+        this.pendingReservations = reservations.filter(r => r.status.toLowerCase() === 'en-attente' || r.status.toLowerCase() === 'en-cours');
+        this.confirmedReservations = reservations.filter(r => r.status.toLowerCase() === 'confirmee');
+        this.rejectedReservations = reservations.filter(r => r.status.toLowerCase() === 'rejetee');
+
+        this.stats = {
+          total: reservations.length,
+          enAttente: this.pendingReservations.length,
+          confirmees: this.confirmedReservations.length,
+          rejetees: this.rejectedReservations.length,
+          annulees: reservations.filter(r => {
+            const s = (r as any).status?.toString().toLowerCase();
+            return s === 'annulee' || s === 'cancelled' || s === 'cancel' || s === 'annule';
+          }).length
+        };
+
+        this.updateTabCounts();
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Failed to refresh reservations after mutation', err);
+      }
+    });
   }
 
   formatDate(dateString: string|Date): string {
@@ -448,5 +535,14 @@ export class ReservationsComponent implements OnInit {
 
   navigateToSpaces(): void {
     this.router.navigate(['/dashboard/espaces']);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  trackByReservation(_index: number, item: Reservation) {
+    return item?.id ?? _index;
   }
 }

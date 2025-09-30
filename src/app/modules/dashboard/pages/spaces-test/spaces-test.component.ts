@@ -74,7 +74,7 @@ export class SpacesTestComponent implements OnInit {
       capacity: Math.floor(Math.random() * 5) + 1,
       price: Math.floor(Math.random() * 50000) + 10000,
       availability: '8h-18h',
-      status: 'disponible',
+  status: true,
       features: ['Wi-Fi', 'Test']
     });
   }

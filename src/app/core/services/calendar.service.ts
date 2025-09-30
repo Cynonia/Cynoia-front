@@ -12,7 +12,7 @@ export interface CalendarEvent {
   end: Date;
   spaceId: string;
   spaceName: string;
-  status: 'en-attente' | 'confirmee' | 'rejetee';
+  status: 'en-attente' | 'confirmee' | 'rejetee' | 'en-cours';
   memberName: string;
   color: string;
 }
@@ -137,29 +137,72 @@ export class CalendarService {
 
   // Conversion des réservations en événements calendrier
   private convertReservationToEvent(reservation: Reservation): CalendarEvent {
-    const space = this.spacesService.getSpaceById(reservation.spaceId);
+  // Normalize space id to string to avoid mismatches between number/string
+  const rawSpaceId = (reservation as any).spaceId ?? reservation.espace?.id ?? '';
+  const spaceId = rawSpaceId !== null && rawSpaceId !== undefined ? String(rawSpaceId) : '';
+  const space = this.spacesService?.getSpaceById ? this.spacesService.getSpaceById(spaceId) : undefined;
     
     // Conversion des heures string en Date
-    const startDate = new Date(reservation.reservationDate);
-    const endDate = new Date(reservation.reservationDate);
+    const reservationDate = reservation.reservationDate ? new Date(reservation.reservationDate) : new Date();
+  let startDate = new Date(reservationDate);
+  let endDate = new Date(reservationDate);
     
-    // Parse des heures (format "HH:MM")
-    const [startHour, startMinute] = reservation.startTime.split(':').map(Number);
-    const [endHour, endMinute] = reservation.endTime.split(':').map(Number);
-    
+    // Parse des heures (format "HH:MM") - be defensive in case fields are missing
+    let startHour = 8, startMinute = 0;
+    let endHour: number | null = null, endMinute: number | null = null;
+    try {
+      if (reservation.startTime) {
+        const s = (reservation.startTime || '').toString().split(':').map(Number);
+        if (!isNaN(s[0])) startHour = s[0];
+        if (!isNaN(s[1])) startMinute = s[1];
+      }
+      if (reservation.endTime) {
+        const e = (reservation.endTime || '').toString().split(':').map(Number);
+        if (!isNaN(e[0])) endHour = e[0];
+        if (!isNaN(e[1])) endMinute = e[1];
+      }
+    } catch (err) {
+      // keep defaults
+    }
+
     startDate.setHours(startHour, startMinute, 0, 0);
-    endDate.setHours(endHour, endMinute, 0, 0);
-    
+
+    // If end time is provided and parseable, use it; otherwise derive from duration or default to +1h
+    if (endHour !== null) {
+      endDate.setHours(endHour, endMinute ?? 0, 0, 0);
+      // If end is not after start, try to derive from duration or add 1 hour
+      if (endDate <= startDate) {
+        if (typeof (reservation as any).duration === 'number' && (reservation as any).duration > 0) {
+          endDate = new Date(startDate.getTime() + (reservation as any).duration * 60 * 60 * 1000);
+        } else {
+          endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+        }
+      }
+    } else {
+      // No end time provided: use duration if available, otherwise default +1h
+      if (typeof (reservation as any).duration === 'number' && (reservation as any).duration > 0) {
+        endDate = new Date(startDate.getTime() + (reservation as any).duration * 60 * 60 * 1000);
+      } else {
+        endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      }
+    }
+
+    // Prefer the reservation creator (user) when available, fallback to member or generic label
+    const memberName = reservation.user?.firstName || reservation.user?.lastName
+      ? `${reservation.user?.firstName || ''} ${reservation.user?.lastName || ''}`.trim()
+      : reservation.member?.name || (reservation as any).memberName || 'Membre inconnu';
+
+    const normalizedStatus = ReservationsService.normalizeReservationStatus((reservation as any).status);
     return {
       id: reservation.id,
       title: `Réservation`,
       start: startDate,
       end: endDate,
-      spaceId: reservation.spaceId,
+      spaceId: spaceId,
       spaceName: space?.name || 'Espace inconnu',
-      status: reservation.status === 'annulee' ? 'rejetee' : reservation.status,
-      memberName: reservation.member?.name || 'Membre inconnu',
-      color: this.getEventColor(reservation.status === 'annulee' ? 'rejetee' : reservation.status)
+      status: normalizedStatus,
+      memberName,
+      color: this.getEventColor(normalizedStatus)
     };
   }
 
@@ -171,6 +214,8 @@ export class CalendarService {
         return '#EF4444'; // Rouge
       case 'en-attente':
         return '#F59E0B'; // Jaune/Orange
+      case 'en-cours':
+        return '#3B82F6'; // Bleu
       default:
         return '#6B7280'; // Gris
     }
@@ -198,8 +243,10 @@ export class CalendarService {
     endDate.setDate(lastDay.getDate() + daysToAdd);
 
     // Récupérer les réservations pour la période
-    const reservations = this.getReservationsForPeriod(startDate, endDate);
-    const events = reservations.map(r => this.convertReservationToEvent(r));
+  const reservations = this.getReservationsForPeriod(startDate, endDate) || [];
+  const events = reservations.map(r => this.convertReservationToEvent(r));
+
+  console.debug('[CalendarService] month events generated:', events.length, 'for', startDate.toISOString(), '->', endDate.toISOString());
 
     // Générer les semaines
     const weeks: CalendarWeek[] = [];
@@ -241,8 +288,8 @@ export class CalendarService {
     // Récupérer les réservations pour la semaine
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
-    const reservations = this.getReservationsForPeriod(startOfWeek, endOfWeek);
-    const events = reservations.map(r => this.convertReservationToEvent(r));
+  const reservations = this.getReservationsForPeriod(startOfWeek, endOfWeek) || [];
+  const events = reservations.map(r => this.convertReservationToEvent(r));
 
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(startOfWeek);
@@ -273,8 +320,8 @@ export class CalendarService {
     endOfDay.setHours(23, 59, 59, 999);
 
     // Récupérer les réservations pour le jour
-    const reservations = this.getReservationsForPeriod(startOfDay, endOfDay);
-    const events = reservations.map(r => this.convertReservationToEvent(r));
+  const reservations = this.getReservationsForPeriod(startOfDay, endOfDay) || [];
+  const events = reservations.map(r => this.convertReservationToEvent(r));
 
     // Créer les créneaux horaires (8h à 22h)
     const timeSlots: TimeSlot[] = [];
@@ -295,17 +342,17 @@ export class CalendarService {
 
   // Récupération des réservations
   private getReservationsForPeriod(startDate: Date, endDate: Date): Reservation[] {
-    const allReservations = this.reservationsService.getAllReservations();
+    const allReservations = (this.reservationsService && this.reservationsService.getAllReservations)
+      ? this.reservationsService.getAllReservations() : [];
     const selectedSpaceId = this.getSelectedSpaceId();
 
     return allReservations.filter(reservation => {
       // Filtrer par période - comparer les dates
-      const reservationDate = reservation.reservationDate;
-      
-      const isInPeriod = reservationDate >= startDate && reservationDate <= endDate;
+      const reservationDate = reservation.reservationDate ? new Date(reservation.reservationDate) : null;
+      const isInPeriod = reservationDate ? (reservationDate >= startDate && reservationDate <= endDate) : false;
 
       // Filtrer par espace si sélectionné
-      const isInSelectedSpace = !selectedSpaceId || reservation.spaceId === selectedSpaceId;
+      const isInSelectedSpace = !selectedSpaceId || (reservation.spaceId ?? reservation.espace?.id) === selectedSpaceId;
 
       return isInPeriod && isInSelectedSpace;
     });

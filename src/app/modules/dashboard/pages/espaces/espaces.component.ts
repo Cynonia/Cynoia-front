@@ -10,6 +10,7 @@ import {
 // Removed unused SpacesService import
 import { EspaceService } from '../../../../core/services/espace.service';
 import { EspaceFormComponent } from './espace-modal.component';
+import { ModalService } from '../../../../core/services/modal.service';
 
 // Interface pour les données de l'API
 interface ApiEspace {
@@ -92,7 +93,7 @@ interface UiSpace {
         </div>
         <button
           (click)="openAddSpaceModal()"
-          class="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          class="flex items-center gap-2 btn-primary px-4 py-2 rounded-lg hover:brightness-90 transition-colors"
           type="button"
         >
           <svg
@@ -210,7 +211,7 @@ interface UiSpace {
           </p>
           <button
             (click)="openAddSpaceModal()"
-            class="inline-flex items-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+            class="inline-flex items-center gap-2 btn-primary px-6 py-3 rounded-lg hover:brightness-90 transition-colors"
             type="button"
           >
             <svg
@@ -471,7 +472,7 @@ export class EspacesComponent implements OnInit {
     { value: 'equipement' as const, label: 'Équipements' },
   ];
 
-  constructor(private espaceService: EspaceService, private fb: FormBuilder) {}
+  constructor(private espaceService: EspaceService, private fb: FormBuilder, private modal: ModalService) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -588,10 +589,14 @@ export class EspacesComponent implements OnInit {
     this.showAddModal = true;
   }
 
-  deleteSpace(space: UiSpace): void {
-  if (
-    confirm(`Êtes-vous sûr de vouloir supprimer l'espace "${space.name}" ?`)
-  ) {
+  async deleteSpace(space: UiSpace): Promise<void> {
+    const ok = await this.modal.confirm({
+      title: 'Supprimer l\'espace',
+      message: `Êtes-vous sûr de vouloir supprimer l'espace "${space.name}" ?`,
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler'
+    });
+    if (!ok) return;
     this.espaceService.delete(space.id).subscribe({
       next: () => {
         this.spaces = this.spaces.filter(s => s.id !== space.id);
@@ -602,7 +607,6 @@ export class EspacesComponent implements OnInit {
       },
     });
   }
-}
 
 
   private getTypeIdFromType(type: 'bureau' | 'salle' | 'equipement'): number {
@@ -639,7 +643,7 @@ export class EspacesComponent implements OnInit {
   ): string {
     const base = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors';
     if (filterType === this.currentFilter) {
-      return `${base} bg-purple-600 text-white`;
+  return `${base} btn-primary text-white`;
     }
     return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200`;
   }

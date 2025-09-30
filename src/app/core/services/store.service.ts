@@ -40,10 +40,15 @@ export class StoreService {
   private state = new BehaviorSubject<any>({});
 
   constructor() {
-    // Initialiser l'état depuis le localStorage
-    const savedState = localStorage.getItem(this.STORAGE_KEY);
-    if (savedState) {
-      this.state.next(JSON.parse(savedState));
+    // Initialiser l'état depuis le localStorage (guard for SSR)
+    try {
+      const savedState = this.safeLocalGet(this.STORAGE_KEY);
+      if (savedState) {
+        this.state.next(JSON.parse(savedState));
+      }
+    } catch (err) {
+      // In SSR there is no localStorage; keep in-memory state empty
+      // console.debug('StoreService: localStorage not available in this environment');
     }
   }
 
@@ -55,8 +60,8 @@ export class StoreService {
       onboardingStep: 'organization'
     };
 
-    // Sauvegarder dans le localStorage
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    // Sauvegarder dans le localStorage (if available)
+    this.safeLocalSet(this.STORAGE_KEY, JSON.stringify(newState));
     this.state.next(newState);
   }
 
@@ -68,8 +73,8 @@ export class StoreService {
       onboardingStep: 'branding-logo'
     };
 
-    // Sauvegarder dans le localStorage
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    // Sauvegarder dans le localStorage (if available)
+    this.safeLocalSet(this.STORAGE_KEY, JSON.stringify(newState));
     this.state.next(newState);
   }
 
@@ -83,7 +88,7 @@ export class StoreService {
       },
       onboardingStep: 'branding-colors'
     };
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    this.safeLocalSet(this.STORAGE_KEY, JSON.stringify(newState));
     this.state.next(newState);
   }
 
@@ -97,7 +102,7 @@ export class StoreService {
       },
       onboardingStep: 'branding-preview'
     };
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+    this.safeLocalSet(this.STORAGE_KEY, JSON.stringify(newState));
     this.state.next(newState);
   }
 
@@ -116,6 +121,90 @@ export class StoreService {
 
   prepareApiPayload(){
     return  {}
+  }
+
+  // Pending reservation helpers (temporary storage across payment flow)
+  savePendingReservation(reservation: any, persist = false) {
+    try {
+      if (persist) this.safeSessionSet('pendingReservation', JSON.stringify(reservation));
+      this.state.next({ ...this.state.value, pendingReservation: reservation });
+    } catch (err) {
+      console.error('Failed to save pending reservation', err);
+    }
+  }
+
+  getPendingReservation(): any | null {
+    try {
+      const fromState = this.state.value?.pendingReservation;
+      if (fromState) return fromState;
+      const fromSession = this.safeSessionGet('pendingReservation');
+      return fromSession ? JSON.parse(fromSession) : null;
+    } catch (err) {
+      console.error('Failed to read pending reservation', err);
+      return null;
+    }
+  }
+
+  clearPendingReservation() {
+    try {
+      this.state.next({ ...this.state.value, pendingReservation: undefined });
+      this.safeSessionRemove('pendingReservation');
+    } catch (err) {
+      console.error('Failed to clear pending reservation', err);
+    }
+  }
+
+  // Safe storage helpers (guards for SSR)
+  private safeLocalGet(key: string): string | null {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage.getItem(key);
+      }
+    } catch (err) {
+      // ignore
+    }
+    return null;
+  }
+
+  private safeLocalSet(key: string, value: string): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  private safeSessionGet(key: string): string | null {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        return window.sessionStorage.getItem(key);
+      }
+    } catch (err) {
+      // ignore
+    }
+    return null;
+  }
+
+  private safeSessionSet(key: string, value: string): void {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem(key, value);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  private safeSessionRemove(key: string): void {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.removeItem(key);
+      }
+    } catch (err) {
+      // ignore
+    }
   }
 
   // ... autres méthodes du service ...

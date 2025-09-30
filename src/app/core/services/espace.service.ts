@@ -1,54 +1,33 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CreateEspaceDto, UpdateEspaceDto, Espace } from '../models/espace.model';
-import { AuthService } from './auth.service'; // adjust path if different
-import { environment } from '../../../environments/environment';
+import { ApiService, ApiResponse } from './api.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EspaceService {
-  private readonly baseUrl =
-      environment.apiUrl + 'espaces' ||
-      'http://localhost:3000/api/v1/espaces';
+  private readonly endpoint = '/espaces';
 
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
-  private getAuthHeaders(): HttpHeaders {
-    const token = sessionStorage.getItem("token");
-    return new HttpHeaders({
-      Authorization: `Bearer ${token}`
-    });
+  getAll(): Observable<ApiResponse<Espace[]>> {
+    return this.api.get<Espace[]>(this.endpoint);
   }
 
-  getAll(): Observable<Espace[]> {
-    return this.http.get<Espace[]>(this.baseUrl, {
-      headers: this.getAuthHeaders()
-    });
+  getById(id: number): Observable<ApiResponse<Espace>> {
+    return this.api.get<Espace>(`${this.endpoint}/${id}`);
   }
 
-  getById(id: number): Observable<{ data: Espace }> {
-    return this.http.get<{ data: Espace }>(`${this.baseUrl}/${id}`, {
-      headers: this.getAuthHeaders()
-    });
+  create(data: CreateEspaceDto): Observable<ApiResponse<Espace>> {
+    return this.api.post<Espace>(this.endpoint, data);
   }
 
-  create(data: CreateEspaceDto): Observable<Espace> {
-    return this.http.post<Espace>(this.baseUrl, data, {
-      headers: this.getAuthHeaders()
-    });
+  update(id: number, data: UpdateEspaceDto): Observable<ApiResponse<Espace>> {
+    return this.api.put<Espace>(`${this.endpoint}/${id}`, data);
   }
 
-  update(id: number, data: UpdateEspaceDto): Observable<Espace> {
-    return this.http.put<Espace>(`${this.baseUrl}/${id}`, data, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
-      headers: this.getAuthHeaders()
-    });
+  delete(id: number): Observable<ApiResponse<void>> {
+    return this.api.delete<void>(`${this.endpoint}/${id}`);
   }
 }

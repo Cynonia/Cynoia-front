@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ModalService } from '../../../../core/services/modal.service';
+import { ReservationsService } from '../../../../core/services/reservations.service';
+import { CalendarService, CalendarEvent, CalendarWeek, CalendarDay, TimeSlot } from '../../../../core/services/calendar.service';
 
 @Component({
   selector: 'app-mes-reservations',
@@ -8,13 +11,11 @@ import { Router } from '@angular/router';
   imports: [CommonModule],
   template: `
     <div class="space-y-6">
-      <!-- Header -->
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Mes réservations</h1>
         <p class="text-gray-600">Gérez vos espaces réservés</p>
       </div>
 
-      <!-- Navigation temporelle -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
           <button 
@@ -36,19 +37,17 @@ import { Router } from '@angular/router';
           </button>
         </div>
 
-        <!-- Filtres de vue -->
         <div class="flex items-center gap-2">
           <button 
             *ngFor="let view of viewTypes"
             (click)="setViewType(view.key)"
-            [class]="currentView === view.key ? 'bg-purple-600 text-white' : 'bg-white text-gray-700 border-gray-300'"
+            [class]="currentView === view.key ? 'btn-primary text-white' : 'bg-white text-gray-700 border-gray-300'"
             class="px-3 py-1 text-sm font-medium border rounded-lg transition-colors hover:bg-gray-50">
             {{ view.label }}
           </button>
         </div>
       </div>
 
-      <!-- Statistiques -->
       <div class="grid grid-cols-3 gap-6">
         <div class="text-center">
           <div class="text-2xl font-bold text-gray-900">{{ stats.aVenir }}</div>
@@ -61,6 +60,54 @@ import { Router } from '@angular/router';
         <div class="text-center">
           <div class="text-2xl font-bold text-orange-600">{{ stats.enAttente }}</div>
           <div class="text-sm text-gray-600">En attente</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div *ngIf="currentView === 'month'">
+          <div class="grid grid-cols-7 gap-1 text-sm text-gray-600 mb-2">
+            <div class="text-center font-medium">Lun</div>
+            <div class="text-center font-medium">Mar</div>
+            <div class="text-center font-medium">Mer</div>
+            <div class="text-center font-medium">Jeu</div>
+            <div class="text-center font-medium">Ven</div>
+            <div class="text-center font-medium">Sam</div>
+            <div class="text-center font-medium">Dim</div>
+          </div>
+          <div class="grid grid-cols-7 gap-2">
+            <ng-container *ngFor="let week of monthWeeks">
+              <ng-container *ngFor="let day of week.days">
+                <div [class]="day.isCurrentMonth ? 'p-2 border rounded-lg' : 'p-2 border rounded-lg opacity-50'">
+                  <div class="text-xs font-medium mb-1">{{ day.date.getDate() }}</div>
+                  <div *ngFor="let ev of day.events" class="text-xs p-1 mb-1 rounded" [style.background]="ev.color">
+                    <div class="truncate text-white text-xs">{{ ev.title }} - {{ ev.spaceName }}</div>
+                  </div>
+                </div>
+              </ng-container>
+            </ng-container>
+          </div>
+        </div>
+
+        <div *ngIf="currentView === 'week'">
+          <div class="flex gap-2">
+            <div *ngFor="let day of weekDays" class="flex-1 border rounded-lg p-2">
+              <div class="font-medium text-sm">{{ day.date.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit' }) }}</div>
+              <div *ngFor="let ev of day.events" class="text-xs p-1 mt-1 rounded" [style.background]="ev.color">
+                <div class="text-white">{{ ev.title }} — {{ formatTimeRange(ev.start, ev.end) }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="currentView === 'day'">
+          <div class="space-y-1">
+            <div *ngFor="let slot of daySlots" class="p-2 border rounded-lg">
+              <div class="text-xs text-gray-600">{{ slot.hour }}:00</div>
+              <div *ngFor="let ev of slot.events" class="text-sm p-1 mt-1 rounded" [style.background]="ev.color">
+                <div class="text-white">{{ ev.title }} — {{ formatTimeRange(ev.start, ev.end) }}</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -96,15 +143,15 @@ import { Router } from '@angular/router';
               
               <!-- Actions selon le statut -->
               <div class="flex gap-2">
-                <button *ngIf="reservation.status === 'pending'" 
+                <button *ngIf="reservation.status === 'en-attente'" 
                         (click)="cancelReservation(reservation.id)"
                         class="text-red-600 hover:text-red-700 text-sm font-medium">
                   Annuler
                 </button>
                 
-                <button *ngIf="reservation.status === 'confirmed'" 
+                <button *ngIf="reservation.status === 'confirmee'" 
                         (click)="viewReservation(reservation.id)"
-                        class="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                        class="text-primary hover:text-opacity-90 text-sm font-medium">
                   Voir détails
                 </button>
               </div>
@@ -120,7 +167,7 @@ import { Router } from '@angular/router';
           <p>Aucune réservation trouvée</p>
           <button 
             (click)="goToSpaces()"
-            class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            class="mt-4 px-4 py-2 btn-primary text-white rounded-lg hover:brightness-90 transition-colors">
             Découvrir les espaces
           </button>
         </div>
@@ -129,10 +176,7 @@ import { Router } from '@angular/router';
   `
 })
 export class MesReservationsComponent implements OnInit {
-  // Navigation temporelle
-  currentDate = new Date(2025, 8); // septembre 2025
-  currentView = 'month';
-  
+  // Navigation temporelle driven by CalendarService
   viewTypes = [
     { key: 'day', label: 'Jour' },
     { key: 'week', label: 'Semaine' }, 
@@ -146,103 +190,162 @@ export class MesReservationsComponent implements OnInit {
     enAttente: 1
   };
 
-  reservations: any[] = [
-    {
-      id: 1,
-      spaceName: 'Bureau privé 101',
-      dateLabel: 'lun. 20 janv.',
-      timeRange: '10:00-17:00',
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      spaceName: 'Salle de réunion Alpha',
-      dateLabel: 'ven. 17 janv.',
-      timeRange: '14:00-16:00',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      spaceName: 'Bureau privé 101',
-      dateLabel: 'jeu. 16 janv.',
-      timeRange: '09:00-12:00',
-      status: 'confirmed'
-    },
-    {
-      id: 4,
-      spaceName: 'Projecteur HD',
-      dateLabel: 'dim. 12 janv.',
-      timeRange: '19:00-12:00',
-      status: 'cancelled'
-    }
-  ];
+  // reservations used for list UI (flattened calendar events)
+  reservations: any[] = [];
 
-  constructor(private router: Router) {}
+  // Raw events from calendar
+  private calendarEvents: CalendarEvent[] = [];
+  // Data for template calendar views
+  monthWeeks: CalendarWeek[] = [];
+  weekDays: CalendarDay[] = [];
+  daySlots: TimeSlot[] = [];
+  // Helper used by template to check current view
+  get currentView(): string {
+    return this.calendarService.getCurrentView();
+  }
+
+  constructor(
+    private router: Router,
+    private modal: ModalService,
+    private reservationsService: ReservationsService,
+    private calendarService: CalendarService
+  ) {}
+
+  // Template helpers that delegate to CalendarService
+  formatTimeRange(start: Date, end: Date): string {
+    return this.calendarService.formatTimeRange(start, end);
+  }
+
+  formatTime(date: Date): string {
+    return this.calendarService.formatTime(date);
+  }
 
   ngOnInit() {
-    this.loadReservations();
-    this.updateStats();
+    // Watch reservations from API to keep calendar source fresh
+    this.reservationsService.reservations$.subscribe(() => {
+      // Recompute displayed reservations when source changes; CalendarService reads from ReservationsService internally
+      this.updateDisplayedReservations();
+    });
+
+    // React to calendar navigation/view changes and recompute displayed reservations
+    this.calendarService.currentDate$.subscribe(() => this.updateDisplayedReservations());
+    this.calendarService.currentView$.subscribe(() => this.updateDisplayedReservations());
   }
 
   get currentMonthLabel(): string {
-    return this.currentDate.toLocaleDateString('fr-FR', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
+    return this.calendarService.formatMonthYear(this.calendarService.getCurrentDate());
   }
 
   navigateMonth(direction: number) {
-    const newDate = new Date(this.currentDate);
-    newDate.setMonth(newDate.getMonth() + direction);
-    this.currentDate = newDate;
+    if (direction < 0) this.calendarService.goToPreviousPeriod();
+    else this.calendarService.goToNextPeriod();
   }
 
   setViewType(view: string) {
-    this.currentView = view;
+    this.calendarService.setCurrentView(view as any);
   }
 
   loadReservations() {
-    // Récupération depuis localStorage ou API
-    const stored = localStorage.getItem('userReservations');
-    if (stored) {
-      const savedReservations = JSON.parse(stored);
-      this.reservations = [...this.reservations, ...savedReservations];
-    }
+    // LocalStorage usage removed: reservations now come from ReservationsService
   }
 
   updateStats() {
-    this.stats.confirmees = this.reservations.filter(r => r.status === 'confirmed').length;
-    this.stats.enAttente = this.reservations.filter(r => r.status === 'pending').length;
-    this.stats.aVenir = this.reservations.filter(r => r.status === 'upcoming').length;
+    this.stats.confirmees = this.reservations.filter(r => r.status === 'confirmee').length;
+    this.stats.enAttente = this.reservations.filter(r => r.status === 'en-attente' || r.status === 'en-cours').length;
+    this.stats.aVenir = this.reservations.filter(r => r.status === 'en-cours').length;
   }
 
   getStatusClass(status: string): string {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-700';
-      case 'pending': return 'bg-orange-100 text-orange-700';
-      case 'cancelled': return 'bg-red-100 text-red-700';
-      case 'upcoming': return 'bg-blue-100 text-blue-700';
+    const s = ReservationsService.normalizeReservationStatus(status);
+    switch (s) {
+      case 'confirmee': return 'bg-green-100 text-green-700';
+      case 'en-attente': return 'bg-orange-100 text-orange-700';
+      case 'rejetee': return 'bg-red-100 text-red-700';
+      case 'en-cours': return 'bg-blue-100 text-blue-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   }
 
   getStatusLabel(status: string): string {
-    switch (status) {
-      case 'confirmed': return 'Confirmée';
-      case 'pending': return 'En attente';
-      case 'cancelled': return 'Annulée';
-      case 'upcoming': return 'À venir';
+    const s = ReservationsService.normalizeReservationStatus(status);
+    switch (s) {
+      case 'confirmee': return 'Confirmée';
+      case 'en-attente': return 'En attente';
+      case 'rejetee': return 'Annulée';
+      case 'en-cours': return 'À venir';
       default: return 'Inconnue';
     }
   }
 
-  cancelReservation(id: number) {
+  async cancelReservation(id: number) {
     const reservation = this.reservations.find(r => r.id === id);
-    if (reservation && confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-      reservation.status = 'cancelled';
+    if (!reservation) return;
+    const ok = await this.modal.confirm({
+      title: 'Annuler la réservation',
+      message: 'Êtes-vous sûr de vouloir annuler cette réservation ?',
+      confirmText: 'Oui, annuler',
+      cancelText: 'Annuler'
+    });
+    if (ok) {
+  reservation.status = 'rejetee';
       this.updateStats();
-      localStorage.setItem('userReservations', JSON.stringify(this.reservations));
+      // Persisting via API is expected; refresh from API to reflect server state
+      this.reservationsService.refreshFromApi();
     }
+  }
+
+  private formatDateLabel(date: any): string {
+    try {
+      const d = new Date(date);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    } catch {
+      return '';
+    }
+  }
+
+  private updateDisplayedReservations(): void {
+    const view = this.calendarService.getCurrentView();
+    const date = this.calendarService.getCurrentDate();
+    let events: CalendarEvent[] = [];
+
+    switch (view) {
+      case 'month': {
+        const weeks = this.calendarService.getMonthData(date);
+        this.monthWeeks = weeks;
+        events = weeks.flatMap(w => w.days.flatMap(d => d.events));
+        break;
+      }
+      case 'week': {
+        const days = this.calendarService.getWeekData(date);
+        this.weekDays = days;
+        events = days.flatMap(d => d.events);
+        break;
+      }
+      case 'day': {
+        const slots = this.calendarService.getDayData(date);
+        this.daySlots = slots;
+        events = slots.flatMap(s => s.events);
+        break;
+      }
+      default:
+        events = [];
+    }
+
+    // Map CalendarEvent into UI reservation list shape
+    this.reservations = events.map(e => ({
+      id: e.id,
+      spaceName: e.spaceName,
+      dateLabel: this.formatDateLabel(e.start),
+      timeRange: this.calendarService.formatTimeRange(e.start, e.end),
+      status: e.status
+    }));
+
+    this.updateStats();
+  }
+
+  private mapStatus(status: string): string {
+    // Return canonical French status keys for the UI
+    return ReservationsService.normalizeReservationStatus(status);
   }
 
   viewReservation(id: number) {

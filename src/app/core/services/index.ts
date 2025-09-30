@@ -7,3 +7,4 @@ export * from './members.service';
 export * from './calendar.service';
 // export * from './toast.service';
 // export * from './socket.service';
+export * from './toast.service';
