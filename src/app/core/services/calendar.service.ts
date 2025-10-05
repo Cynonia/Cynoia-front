@@ -140,7 +140,7 @@ export class CalendarService {
   // Normalize space id to string to avoid mismatches between number/string
   const rawSpaceId = (reservation as any).spaceId ?? reservation.espace?.id ?? '';
   const spaceId = rawSpaceId !== null && rawSpaceId !== undefined ? String(rawSpaceId) : '';
-  const space = this.spacesService?.getSpaceById ? this.spacesService.getSpaceById(spaceId) : undefined;
+  const space = reservation.espace || this.spacesService.getSpaceById(spaceId);
     
     // Conversion des heures string en Date
     const reservationDate = reservation.reservationDate ? new Date(reservation.reservationDate) : new Date();

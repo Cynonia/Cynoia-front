@@ -267,41 +267,6 @@ export class ReservationsService {
     );
   }
 
-  private loadReservations(): void {
-    // No-op: initialization is done via refreshFromApi()
-  }
-
-  private loadMembers(): void {
-    // Members are derived from reservations or fetched separately if an API exists
-  }
-
-  private initializeMembersData(): void {
-    const sampleMembers: Member[] = [
-      {
-        id: '1',
-        name: 'Marie Diallo',
-        email: 'marie.diallo@example.com',
-        avatar: '',
-      },
-      {
-        id: '2',
-        name: 'Ahmed Kouassi',
-        email: 'ahmed.kouassi@example.com',
-        avatar: '',
-      },
-      {
-        id: '3',
-        name: 'Sophie Martin',
-        email: 'sophie.martin@example.com',
-        avatar: '',
-      },
-    ];
-    this.membersSubject.next(sampleMembers);
-  }
-
-  private initializeWithSampleData(): void {
-    // Sample data removed: reservations are loaded from API in production
-  }
 
   private populateSpaceInfo(reservations: Reservation[]): void {
     const updatedReservations = reservations.map((reservation) => {
@@ -411,11 +376,14 @@ export class ReservationsService {
   // Obtenir les statistiques
   getReservationStats(): ReservationStats {
     const reservations = this.reservationsSubject.value;
+
+    console.log(reservations);
+    
     return {
       total: reservations.length,
-      enAttente: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'en-attente').length,
-      confirmees: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'confirmee').length,
-      rejetees: reservations.filter((r) => ReservationsService.normalizeReservationStatus(r.status) === 'rejetee').length,
+      enAttente: reservations.filter((r) => r.status === 'en-cours').length,
+      confirmees: reservations.filter((r) => r.status === 'confirmee').length,
+      rejetees: reservations.filter((r) => r.status === 'rejetee').length,
       annulees: reservations.filter((r) => {
         const s = (r as any).status?.toString().toLowerCase();
         return s === 'annulee' || s === 'cancelled' || s === 'cancel' || s === 'annule';

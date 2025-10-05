@@ -286,10 +286,13 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadDashboardData();
-    // Listen for spaces from the SpacesService (API-backed) and update the count
-    this.spacesService.spaces$.pipe(takeUntil(this.destroy$)).subscribe((spaces) => {
-      this.availableSpacesCount = (spaces || []).filter((s) => s.status === true).length;
-    });
+    this.spacesService.spaces$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((spaces) => {
+        this.availableSpacesCount = (spaces || []).filter(
+          (s) => s.status === true
+        ).length;
+      });
   }
 
   ngOnDestroy(): void {
@@ -310,12 +313,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .slice(0, 5)
           .map((r: any) => {
-            // Base date
             const baseDate = r.reservationDate
               ? new Date(r.reservationDate)
               : new Date();
 
-            // Parse start time
             let startAt = new Date(baseDate);
             let endAt = new Date(baseDate);
             try {
