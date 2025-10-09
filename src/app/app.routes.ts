@@ -47,8 +47,16 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/dashboard/pages/membres/membres.component').then(m => m.MembresComponent)
       },
       {
+        path: 'roles-test',
+        loadComponent: () => import('./modules/dashboard/pages/roles-test/roles-test.component').then(m => m.RolesTestComponent)
+      },
+      {
         path: 'finances',
-        loadComponent: () => import('./modules/dashboard/pages/finances/finances.component').then(m => m.FinancesComponent)
+        loadChildren: () => import('./modules/dashboard/pages/finances/finance.routes').then(m => m.financeRoutes)
+      },
+      {
+        path: 'charts-demo',
+        loadComponent: () => import('./modules/dashboard/pages/charts-demo/charts-demo.component').then(m => m.ChartsDemoComponent)
       },
       {
         path: 'messages',

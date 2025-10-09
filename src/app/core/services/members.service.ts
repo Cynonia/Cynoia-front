@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, first } from 'rxjs';
+import { BehaviorSubject, Observable, map, catchError, throwError, switchMap, of, forkJoin, combineLatest } from 'rxjs';
 import { ApiService } from './api.service';
+import { InvitationService, InvitationRequest } from './invitation.service';
+import { AuthService } from './auth.service';
+import { RolesService } from './roles.service';
 
 export type MemberRole = 'proprietaire' | 'gestionnaire' | 'membre' | 'staff';
 export type MemberStatus = 'actif' | 'inactif' | 'en-attente';
@@ -11,20 +14,21 @@ export interface MemberProfile {
   email: string;
   role: MemberRole;
   status: MemberStatus;
+  avatar?: string;
   joinedAt: Date;
   lastActivity?: Date;
-  avatar?: string;
-  initials: string;
+  permissions?: string[];
 }
 
 export interface MemberStats {
   total: number;
+  actifs: number;
+  inactifs: number;
+  enAttente: number;
   proprietaires: number;
   gestionnaires: number;
   membres: number;
   staff: number;
-  actifs: number;
-  inactifs: number;
 }
 
 export interface MemberFilter {
@@ -34,7 +38,7 @@ export interface MemberFilter {
 }
 
 export interface CreateMemberData {
-  name: string;
+  name?: string;
   email: string;
   role: MemberRole;
 }
@@ -43,195 +47,267 @@ export interface CreateMemberData {
   providedIn: 'root'
 })
 export class MembersService {
-  private readonly STORAGE_KEY = 'cynoia_members';
-  
   private membersSubject = new BehaviorSubject<MemberProfile[]>([]);
   public members$ = this.membersSubject.asObservable();
 
-  constructor(private api: ApiService) {
-    this.refreshFromApi();
+  constructor(
+    private api: ApiService,
+    private invitationService: InvitationService,
+    private authService: AuthService,
+    private rolesService: RolesService
+  ) {
+    this.loadMembers();
   }
 
-  private refreshFromApi(): void {
-    this.api.get<MemberProfile[]>('/members').pipe(first()).subscribe({
-      next: (res) => {
-        const members = (res.data || []).map((m: any) => ({
-          ...m,
-          joinedAt: new Date(m.joinedAt),
-          lastActivity: m.lastActivity ? new Date(m.lastActivity) : undefined,
-          initials: m.initials || this.generateInitials(m.name || '')
-        }));
-        this.membersSubject.next(members);
-      },
-      error: (err) => {
-        console.warn('Unable to fetch members from API, falling back to sample data:', err);
-        this.initializeWithSampleData();
-      }
-    });
-  }
-
-  private initializeWithSampleData(): void {
-    const sampleMembers: MemberProfile[] = [
+  private loadMembers(): void {
+    const initialMembers: MemberProfile[] = [
       {
-        id: 'member-1',
-        name: 'Jean Kouame',
-        email: 'jean.kouame@example.com',
+        id: '1',
+        name: 'Marie Kouassi',
+        email: 'marie@cynoia.com',
         role: 'proprietaire',
         status: 'actif',
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612d5c7',
         joinedAt: new Date('2024-01-15'),
-        lastActivity: new Date('2024-12-15'),
-        initials: 'JK'
+        lastActivity: new Date(),
+        permissions: ['all']
       },
       {
-        id: 'member-2',
-        name: 'Marie Diallo',
-        email: 'marie.diallo@example.com',
-        role: 'membre',
-        status: 'actif',
-        joinedAt: new Date('2024-11-20'),
-        lastActivity: new Date('2024-12-14'),
-        initials: 'MD'
-      },
-      {
-        id: 'member-3',
-        name: 'Ahmed Kouassi',
-        email: 'ahmed.kouassi@example.com',
-        role: 'membre',
-        status: 'actif',
-        joinedAt: new Date('2024-12-01'),
-        lastActivity: new Date('2024-12-13'),
-        initials: 'AK'
-      },
-      {
-        id: 'member-4',
-        name: 'Fatou Ndiaye',
-        email: 'fatou.ndiaye@example.com',
+        id: '2', 
+        name: 'Jean Diallo',
+        email: 'jean@cynoia.com',
         role: 'gestionnaire',
         status: 'actif',
-        joinedAt: new Date('2024-10-15'),
-        lastActivity: new Date('2024-12-12'),
-        initials: 'FN'
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e',
+        joinedAt: new Date('2024-02-01'),
+        lastActivity: new Date(Date.now() - 1000 * 60 * 30),
+        permissions: ['manage_spaces', 'manage_reservations']
       },
       {
-        id: 'member-5',
-        name: 'Sekou Traore',
-        email: 'sekou.traore@example.com',
+        id: '3',
+        name: 'Aminata Traoré',
+        email: 'aminata@example.com',
         role: 'membre',
-        status: 'en-attente',
-        joinedAt: new Date('2024-12-10'),
-        initials: 'ST'
+        status: 'actif',
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80',
+        joinedAt: new Date('2024-02-10'),
+        lastActivity: new Date(Date.now() - 1000 * 60 * 60 * 2),
+        permissions: ['view_spaces', 'make_reservations']
       }
     ];
 
-    this.saveMembers(sampleMembers);
+    this.membersSubject.next(initialMembers);
   }
 
-  private saveMembers(members: MemberProfile[]): void {
-    // Local persistence removed; update in-memory subject only
-    this.membersSubject.next(members);
-  }
-
-  // Obtenir tous les membres
   getAllMembers(): MemberProfile[] {
     return this.membersSubject.value;
   }
 
-  // Obtenir un membre par ID
   getMemberById(id: string): MemberProfile | undefined {
     return this.membersSubject.value.find(member => member.id === id);
   }
 
-  // Filtrer les membres
   getFilteredMembers(filter: MemberFilter): MemberProfile[] {
     let members = this.membersSubject.value;
 
     if (filter.role) {
-      members = members.filter(m => m.role === filter.role);
+      members = members.filter(member => member.role === filter.role);
     }
 
     if (filter.status) {
-      members = members.filter(m => m.status === filter.status);
+      members = members.filter(member => member.status === filter.status);
     }
 
     if (filter.search) {
-      const searchLower = filter.search.toLowerCase();
-      members = members.filter(m => 
-        m.name.toLowerCase().includes(searchLower) ||
-        m.email.toLowerCase().includes(searchLower)
+      const search = filter.search.toLowerCase();
+      members = members.filter(member => 
+        member.name.toLowerCase().includes(search) ||
+        member.email.toLowerCase().includes(search)
       );
     }
 
     return members;
   }
 
-  // Obtenir les membres par rôle
-  getMembersByRole(role: MemberRole): MemberProfile[] {
-    return this.membersSubject.value.filter(member => member.role === role);
-  }
-
-  // Obtenir les statistiques des membres
   getMemberStats(): MemberStats {
     const members = this.membersSubject.value;
-    
     return {
       total: members.length,
+      actifs: members.filter(m => m.status === 'actif').length,
+      inactifs: members.filter(m => m.status === 'inactif').length,
+      enAttente: members.filter(m => m.status === 'en-attente').length,
       proprietaires: members.filter(m => m.role === 'proprietaire').length,
       gestionnaires: members.filter(m => m.role === 'gestionnaire').length,
       membres: members.filter(m => m.role === 'membre').length,
       staff: members.filter(m => m.role === 'staff').length,
-      actifs: members.filter(m => m.status === 'actif').length,
-      inactifs: members.filter(m => m.status === 'inactif').length
     };
   }
 
-  // Créer un nouveau membre
   createMember(memberData: CreateMemberData): MemberProfile {
-    throw new Error('Local createMember is deprecated. Use API endpoints to create members.');
+    const displayName = memberData.name || this.generateUsernameFromEmail(memberData.email);
+    const newMember: MemberProfile = {
+      id: Date.now().toString(),
+      name: displayName,
+      email: memberData.email,
+      role: memberData.role,
+      status: 'en-attente',
+      joinedAt: new Date(),
+      avatar: this.generateAvatar(displayName)
+    };
+
+    const currentMembers = this.membersSubject.value;
+    this.membersSubject.next([...currentMembers, newMember]);
+
+    return newMember;
   }
 
-  // Mettre à jour un membre
+  // ✅ Obtenir le roleId depuis le service des rôles
+  private getRoleIdByName(roleName: MemberRole): Observable<number> {
+    return this.rolesService.roles$.pipe(
+      map(roles => {
+        const role = roles.find(r => 
+          r.name.toLowerCase() === roleName.toLowerCase() ||
+          r.name === roleName
+        );
+        
+        if (role) {
+          console.log(`🔍 Rôle trouvé: "${roleName}" → ID: ${role.id}`);
+          return role.id;
+        }
+        
+        // Fallback avec mapping par défaut si le rôle n'est pas trouvé
+        const defaultMapping: Record<MemberRole, number> = {
+          'proprietaire': 1,
+          'gestionnaire': 2,
+          'membre': 3,
+          'staff': 4
+        };
+        
+        console.log(`⚠️ Rôle "${roleName}" non trouvé dans l'API, utilisation du mapping par défaut: ${defaultMapping[roleName]}`);
+        return defaultMapping[roleName] || 3; // Défaut: membre
+      })
+    );
+  }
+
+  private getCurrentEntityId(): Observable<number> {
+    if (this.authService && this.authService.currentUser$) {
+      return this.authService.currentUser$.pipe(
+        map(user => {
+          console.log('👤 Utilisateur actuel:', user);
+          
+          if (user?.entity?.id) {
+            console.log('🏢 Entité trouvée:', user.entity.id);
+            return user.entity.id;
+          }
+          
+          console.log('⚠️ Aucune entité trouvée, utilisation de l\'ID par défaut');
+          return 1;
+        })
+      );
+    } else {
+      console.log('⚠️ AuthService non disponible, utilisation de l\'ID par défaut');
+      return of(1);
+    }
+  }
+
+  sendInvitation(memberData: CreateMemberData): Observable<any> {
+    return combineLatest([
+      this.getCurrentEntityId(),
+      this.getRoleIdByName(memberData.role)
+    ]).pipe(
+      switchMap(([entityId, roleId]) => {
+        // ✅ Nouvelle structure conforme au backend
+        const invitationData: InvitationRequest = {
+          email: memberData.email,
+          entityId: entityId,
+          roleId: roleId // ✅ Utilisation du roleId dynamique
+          // ❌ Supprimé le champ 'name'
+        };
+
+        console.log('📧 Données invitation complètes:', invitationData);
+        
+        return this.invitationService.sendInvitation(invitationData).pipe(
+          map(response => {
+            // ✅ Créer un membre local avec un username temporaire basé sur l'email
+            const tempMemberData: CreateMemberData = {
+              ...memberData,
+              name: memberData.name || this.generateUsernameFromEmail(memberData.email)
+            };
+            const member = this.createMember(tempMemberData);
+            console.log('✅ Invitation envoyée avec succès:', response);
+            return { member, invitation: response.data };
+          }),
+          catchError(error => {
+            console.error('❌ Erreur lors de l\'envoi de l\'invitation:', error);
+            return throwError(() => error);
+          })
+        );
+      })
+    );
+  }
+
+  // ✅ Génération d'un nom d'utilisateur temporaire basé sur l'email
+  private generateUsernameFromEmail(email: string): string {
+    const emailPart = email.split('@')[0];
+    return emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+  }
+
+  // ✅ Obtenir les rôles disponibles pour les invitations
+  getAvailableRoles(): Observable<any[]> {
+    return this.rolesService.roles$.pipe(
+      map(roles => 
+        roles
+          .filter(role => ['membre', 'gestionnaire', 'staff'].includes(role.name.toLowerCase()))
+          .map(role => ({
+            value: role.name.toLowerCase() as MemberRole,
+            label: this.getRoleLabel(role.name.toLowerCase() as MemberRole),
+            id: role.id
+          }))
+      )
+    );
+  }
+
   updateMember(id: string, updates: Partial<MemberProfile>): MemberProfile | null {
-    throw new Error('Local updateMember is deprecated. Use API endpoints to update members.');
+    const currentMembers = this.membersSubject.value;
+    const memberIndex = currentMembers.findIndex(member => member.id === id);
+    
+    if (memberIndex === -1) return null;
+
+    const updatedMember = { ...currentMembers[memberIndex], ...updates };
+    currentMembers[memberIndex] = updatedMember;
+    this.membersSubject.next([...currentMembers]);
+
+    return updatedMember;
   }
 
-  // Supprimer un membre
   deleteMember(id: string): boolean {
-    throw new Error('Local deleteMember is deprecated. Use API endpoints to delete members.');
+    const currentMembers = this.membersSubject.value;
+    const filteredMembers = currentMembers.filter(member => member.id !== id);
+    
+    if (filteredMembers.length === currentMembers.length) return false;
+
+    this.membersSubject.next(filteredMembers);
+    return true;
   }
 
-  // Changer le rôle d'un membre
   changeRole(id: string, newRole: MemberRole): MemberProfile | null {
     return this.updateMember(id, { role: newRole });
   }
 
-  // Changer le statut d'un membre
   changeStatus(id: string, newStatus: MemberStatus): MemberProfile | null {
     return this.updateMember(id, { status: newStatus });
   }
 
-  // Envoyer une invitation (simulation)
-  sendInvitation(memberData: CreateMemberData): Promise<MemberProfile> {
-    return new Promise((resolve) => {
-      // Simulation d'un appel API
-      setTimeout(() => {
-        const member = this.createMember(memberData);
-        resolve(member);
-      }, 1000);
-    });
-  }
-
-  // Obtenir le libellé du rôle
   getRoleLabel(role: MemberRole): string {
     const labels: Record<MemberRole, string> = {
       'proprietaire': 'Propriétaire',
-      'gestionnaire': 'Gestionnaire',
+      'gestionnaire': 'Gestionnaire', 
       'membre': 'Membre',
       'staff': 'Staff'
     };
     return labels[role];
   }
 
-  // Obtenir le libellé du statut
   getStatusLabel(status: MemberStatus): string {
     const labels: Record<MemberStatus, string> = {
       'actif': 'Actif',
@@ -241,57 +317,7 @@ export class MembersService {
     return labels[status];
   }
 
-  // Formater la date de dernière activité
-  formatLastActivity(date?: Date): string {
-    if (!date) return 'Jamais connecté';
-    
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) {
-      return 'À l\'instant';
-    } else if (diffInHours < 24) {
-      return `${diffInHours}h`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      if (diffInDays < 30) {
-        return `${diffInDays}j`;
-      } else {
-        return date.toLocaleDateString('fr-FR', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        });
-      }
-    }
-  }
-
-  // Formater la date d'adhésion
-  formatJoinDate(date: Date): string {
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
-
-  // Générer les initiales
-  private generateInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
-  // Générer un ID unique
-  private generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2);
-  }
-
-  // Méthode pour vider tous les membres (utile pour les tests)
-  clearAllMembers(): void {
-    this.membersSubject.next([]);
+  private generateAvatar(name: string): string {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=7c3aed&color=fff&size=128`;
   }
 }
