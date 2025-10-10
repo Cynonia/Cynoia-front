@@ -8,3 +8,4 @@ export * from './calendar.service';
 // export * from './toast.service';
 // export * from './socket.service';
 export * from './toast.service';
+export * from './messages.service';

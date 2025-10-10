@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, CreateMemberData } from '../../../../core/services/members.service';
 import { ModalService } from '../../../../core/services/modal.service';
+import { InvitationService } from '../../../../core/services/invitation.service';
+import { RolesService, Role } from '../../../../core/services/roles.service';
 
 @Component({
   selector: 'app-membres',
@@ -24,14 +26,26 @@ import { ModalService } from '../../../../core/services/modal.service';
           </div>
         </div>
         
-        <button 
-          (click)="showInviteModal = true"
-          class="inline-flex items-center gap-2 btn-primary px-4 py-2 rounded-lg hover:brightness-90 transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-          </svg>
-          Inviter un membre
-        </button>
+        <div class="flex items-center gap-2">
+          <button 
+            (click)="openInviteModal()"
+            class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Inviter un membre
+          </button>
+
+          <!-- Bouton de test -->
+          <button 
+            (click)="openInviteModalTest()"
+            class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            Test Invitation
+          </button>
+        </div>
       </div>
 
       <!-- Statistiques -->
@@ -52,14 +66,14 @@ import { ModalService } from '../../../../core/services/modal.service';
 
         <div class="bg-white rounded-lg border border-gray-200 p-4">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
               </svg>
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.proprietaires }}</p>
-              <p class="text-sm text-gray-600">Propriétaires</p>
+              <p class="text-2xl font-bold text-gray-900">{{ stats.admins }}</p>
+              <p class="text-sm text-gray-600">Administrateurs</p>
             </div>
           </div>
         </div>
@@ -72,7 +86,7 @@ import { ModalService } from '../../../../core/services/modal.service';
               </svg>
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.gestionnaires }}</p>
+              <p class="text-2xl font-bold text-gray-900">{{ stats.managers }}</p>
               <p class="text-sm text-gray-600">Gestionnaires</p>
             </div>
           </div>
@@ -105,7 +119,7 @@ import { ModalService } from '../../../../core/services/modal.service';
                 [(ngModel)]="searchTerm"
                 (ngModelChange)="onSearchChange()"
                 placeholder="Rechercher un membre..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
           </div>
         </div>
@@ -136,7 +150,7 @@ import { ModalService } from '../../../../core/services/modal.service';
               <!-- Avatar -->
               <div [class]="getAvatarClass(member)" 
                    class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-white font-semibold">{{ member.initials }}</span>
+                <span class="text-white font-semibold">{{ getInitials(member.name) }}</span>
               </div>
               
               <!-- Détails -->
@@ -217,18 +231,6 @@ import { ModalService } from '../../../../core/services/modal.service';
           </div>
 
           <form (ngSubmit)="onSubmitInvite()" class="space-y-4">
-            <!-- Nom complet -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Nom complet *</label>
-              <input 
-                type="text" 
-                [(ngModel)]="inviteForm.name"
-                name="name"
-                required
-                placeholder="Marie Diallo"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
-            </div>
-
             <!-- Email -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Adresse email *</label>
@@ -238,7 +240,7 @@ import { ModalService } from '../../../../core/services/modal.service';
                 name="email"
                 required
                 placeholder="marie@example.com"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus-ring-primary focus:border-transparent">
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
 
             <!-- Rôle -->
@@ -248,9 +250,13 @@ import { ModalService } from '../../../../core/services/modal.service';
                 [(ngModel)]="inviteForm.role"
                 name="role"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option value="membre">Membre</option>
-                <option value="gestionnaire">Gestionnaire</option>
-                <option value="staff">Staff</option>
+                <option *ngFor="let role of availableRoles" [value]="role.name.toLowerCase()">
+                  {{ role.name }}
+                </option>
+                <!-- Fallback options si les rôles ne sont pas encore chargés -->
+                <option *ngIf="availableRoles.length === 0" value="member">Membre</option>
+                <option *ngIf="availableRoles.length === 0" value="manager">Gestionnaire</option>
+                <option *ngIf="availableRoles.length === 0" value="client">Client</option>
               </select>
             </div>
 
@@ -261,7 +267,7 @@ import { ModalService } from '../../../../core/services/modal.service';
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                 </svg>
                 <p class="text-sm text-blue-800">
-                  Un email d'invitation sera envoyé à cette adresse avec les instructions pour rejoindre l'organisation.
+                  Un email d'invitation sera envoyé à cette adresse. L'utilisateur pourra compléter son profil lors de l'acceptation de l'invitation.
                 </p>
               </div>
             </div>
@@ -277,7 +283,7 @@ import { ModalService } from '../../../../core/services/modal.service';
               <button 
                 type="submit"
                 [disabled]="isInviting"
-                class="flex-1 px-4 py-2 btn-primary text-white rounded-lg hover:brightness-90 disabled:opacity-50 transition-colors">
+                class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors">
                 {{ isInviting ? 'Envoi...' : "Envoyer l'invitation" }}
               </button>
             </div>
@@ -292,12 +298,13 @@ export class MembresComponent implements OnInit {
   filteredMembers: MemberProfile[] = [];
   stats: MemberStats = {
     total: 0,
-    proprietaires: 0,
-    gestionnaires: 0,
-    membres: 0,
-    staff: 0,
+    admins: 0,
+    managers: 0,
+    members: 0,
+    clients: 0,
     actifs: 0,
-    inactifs: 0
+    inactifs: 0,
+    enAttente: 0
   };
 
   // Filtres et recherche
@@ -309,25 +316,45 @@ export class MembresComponent implements OnInit {
   showInviteModal = false;
   isInviting = false;
   inviteForm: CreateMemberData = {
-    name: '',
     email: '',
-    role: 'membre'
+    role: 'member'
   };
+
+  // Rôles dynamiques
+  availableRoles: Role[] = [];
 
   // Filtres par rôle
   roleFilters = [
     { key: null, label: 'Tous', count: 0 },
-    { key: 'proprietaire', label: 'Propriétaires', count: 0 },
-    { key: 'gestionnaire', label: 'Gestionnaires', count: 0 },
-    { key: 'membre', label: 'Membres', count: 0 },
-    { key: 'staff', label: 'Staff', count: 0 }
+    { key: 'admin', label: 'Administrateurs', count: 0 },
+    { key: 'manager', label: 'Gestionnaires', count: 0 },
+    { key: 'member', label: 'Membres', count: 0 },
+    { key: 'client', label: 'Clients', count: 0 }
   ];
 
-  constructor(private membersService: MembersService, private modal: ModalService) {}
+  constructor(
+    private membersService: MembersService, 
+    private modal: ModalService,
+    private invitationService: InvitationService,
+    private rolesService: RolesService
+  ) {}
 
   ngOnInit(): void {
     this.loadMembers();
     this.subscribeToMembers();
+    this.loadRoles();
+  }
+
+  private loadRoles(): void {
+    this.rolesService.roles$.subscribe(roles => {
+      this.availableRoles = this.rolesService.getInvitableRoles();
+      console.log('🎭 Rôles disponibles pour invitation:', this.availableRoles);
+    });
+    
+    // Charger les rôles si pas encore chargés
+    if (this.rolesService.getAllRoles().length === 0) {
+      this.rolesService.loadRoles().subscribe();
+    }
   }
 
   private subscribeToMembers(): void {
@@ -352,10 +379,10 @@ export class MembresComponent implements OnInit {
 
   private updateRoleFilterCounts(): void {
     this.roleFilters[0].count = this.stats.total; // Tous
-    this.roleFilters[1].count = this.stats.proprietaires; // Propriétaires
-    this.roleFilters[2].count = this.stats.gestionnaires; // Gestionnaires
-    this.roleFilters[3].count = this.stats.membres; // Membres
-    this.roleFilters[4].count = this.stats.staff; // Staff
+    this.roleFilters[1].count = this.stats.admins; // Administrateurs
+    this.roleFilters[2].count = this.stats.managers; // Gestionnaires
+    this.roleFilters[3].count = this.stats.members; // Membres
+    this.roleFilters[4].count = this.stats.clients; // Clients
   }
 
   private applyFilters(): void {
@@ -379,7 +406,7 @@ export class MembresComponent implements OnInit {
   getRoleFilterClass(roleKey: string | null): string {
     const baseClass = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors';
     if (roleKey === this.activeRoleFilter) {
-  return `${baseClass} btn-primary text-white`;
+      return `${baseClass} bg-purple-600 text-white`;
     }
     return `${baseClass} bg-gray-100 text-gray-700 hover:bg-gray-200`;
   }
@@ -388,11 +415,11 @@ export class MembresComponent implements OnInit {
     const baseClass = 'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0';
     
     switch (member.role) {
-      case 'proprietaire':
-  return `${baseClass} btn-primary`;
-      case 'gestionnaire':
+      case 'admin':
+        return `${baseClass} bg-purple-600`;
+      case 'manager':
         return `${baseClass} bg-blue-600`;
-      case 'staff':
+      case 'client':
         return `${baseClass} bg-green-600`;
       default:
         return `${baseClass} bg-gray-500`;
@@ -403,11 +430,11 @@ export class MembresComponent implements OnInit {
     const baseClass = 'px-3 py-1 rounded-full text-sm font-medium';
     
     switch (role) {
-      case 'proprietaire':
-  return `${baseClass} bg-primary/10 text-primary`;
-      case 'gestionnaire':
+      case 'admin':
+        return `${baseClass} bg-purple-100 text-purple-800`;
+      case 'manager':
         return `${baseClass} bg-blue-100 text-blue-800`;
-      case 'staff':
+      case 'client':
         return `${baseClass} bg-green-100 text-green-800`;
       default:
         return `${baseClass} bg-gray-100 text-gray-800`;
@@ -419,11 +446,26 @@ export class MembresComponent implements OnInit {
   }
 
   formatJoinDate(date: Date): string {
-    return this.membersService.formatJoinDate(date);
+    return date.toLocaleDateString('fr-FR');
   }
 
   formatLastActivity(date?: Date): string {
-    return this.membersService.formatLastActivity(date);
+    if (!date) return 'Jamais';
+    
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return 'À l\'instant';
+    if (minutes < 60) return `Il y a ${minutes} min`;
+    if (hours < 24) return `Il y a ${hours}h`;
+    return `Il y a ${days} jour(s)`;
+  }
+
+  getInitials(name: string): string {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
   toggleMemberMenu(memberId: string): void {
@@ -431,7 +473,6 @@ export class MembresComponent implements OnInit {
   }
 
   editMember(member: MemberProfile): void {
-    // TODO: Implémenter l'édition
     console.log('Éditer membre:', member);
     this.activeMemberMenu = null;
   }
@@ -449,32 +490,70 @@ export class MembresComponent implements OnInit {
     this.activeMemberMenu = null;
   }
 
-  closeInviteModal(): void {
-    this.showInviteModal = false;
-    this.inviteForm = {
-      name: '',
-      email: '',
-      role: 'membre'
-    };
-    this.isInviting = false;
-  }
+  // Mise à jour de la validation dans onSubmitInvite
 
   async onSubmitInvite(): Promise<void> {
-    if (!this.inviteForm.name || !this.inviteForm.email) {
+    if (!this.inviteForm.email) { // ✅ Plus besoin de vérifier le name
+      console.error('Email requis');
       return;
     }
 
     this.isInviting = true;
     
     try {
-      await this.membersService.sendInvitation(this.inviteForm);
-      this.closeInviteModal();
-      // TODO: Afficher un message de succès
+      this.membersService.sendInvitation(this.inviteForm).subscribe({
+        next: (result) => {
+          console.log('✅ Invitation envoyée avec succès:', result);
+          this.closeInviteModal();
+          console.log(`✉️ Invitation envoyée à ${this.inviteForm.email}`);
+          this.loadMembers();
+        },
+        error: (error) => {
+          console.error('❌ Erreur lors de l\'envoi de l\'invitation:', error);
+          const errorMessage = error?.error?.message || 'Erreur lors de l\'envoi de l\'invitation';
+          console.error('📝 Message d\'erreur:', errorMessage);
+        },
+        complete: () => {
+          this.isInviting = false;
+        }
+      });
     } catch (error) {
-      console.error('Erreur lors de l\'invitation:', error);
-      // TODO: Afficher un message d'erreur
-    } finally {
+      console.error('🚨 Erreur inattendue:', error);
       this.isInviting = false;
     }
+  }
+
+  // Mise à jour des méthodes d'ouverture du modal
+  closeInviteModal(): void {
+    this.showInviteModal = false;
+    this.inviteForm = {
+      email: '',
+      role: 'member'
+    };
+    this.isInviting = false;
+  }
+
+  openInviteModal(): void {
+    this.showInviteModal = true;
+    this.inviteForm = {
+      email: '',
+      role: 'member'
+    };
+  }
+
+  openInviteModalTest(): void {
+    this.showInviteModal = true;
+    this.inviteForm = {
+      email: 'mady@yopmail.com', 
+      role: 'member'
+    };
+  }
+
+  // Obtenir le libellé d'un rôle dynamiquement
+  getRoleDisplayName(roleName: string): string {
+    const role = this.availableRoles.find(r => 
+      r.name.toLowerCase() === roleName.toLowerCase()
+    );
+    return role ? role.name : roleName;
   }
 }
