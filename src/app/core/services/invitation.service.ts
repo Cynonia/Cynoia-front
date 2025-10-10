@@ -5,8 +5,7 @@ import { ApiService, ApiResponse } from './api.service';
 export interface InvitationRequest {
   email: string;
   entityId: number;
-  roleId: number; // ✅ Changé de 'role' à 'roleId'
-  // ❌ Supprimé le champ 'name'
+  // Backend requires only email and entityId per OpenAPI. Role is not part of this request.
 }
 
 export interface InvitationResponse {

@@ -72,8 +72,8 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
               </svg>
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.proprietaires }}</p>
-              <p class="text-sm text-gray-600">Propriétaires</p>
+              <p class="text-2xl font-bold text-gray-900">{{ stats.admins }}</p>
+              <p class="text-sm text-gray-600">Administrateurs</p>
             </div>
           </div>
         </div>
@@ -86,7 +86,7 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
               </svg>
             </div>
             <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.gestionnaires }}</p>
+              <p class="text-2xl font-bold text-gray-900">{{ stats.managers }}</p>
               <p class="text-sm text-gray-600">Gestionnaires</p>
             </div>
           </div>
@@ -254,9 +254,9 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
                   {{ role.name }}
                 </option>
                 <!-- Fallback options si les rôles ne sont pas encore chargés -->
-                <option *ngIf="availableRoles.length === 0" value="membre">Membre</option>
-                <option *ngIf="availableRoles.length === 0" value="gestionnaire">Gestionnaire</option>
-                <option *ngIf="availableRoles.length === 0" value="staff">Staff</option>
+                <option *ngIf="availableRoles.length === 0" value="member">Membre</option>
+                <option *ngIf="availableRoles.length === 0" value="manager">Gestionnaire</option>
+                <option *ngIf="availableRoles.length === 0" value="client">Client</option>
               </select>
             </div>
 
@@ -298,10 +298,10 @@ export class MembresComponent implements OnInit {
   filteredMembers: MemberProfile[] = [];
   stats: MemberStats = {
     total: 0,
-    proprietaires: 0,
-    gestionnaires: 0,
-    membres: 0,
-    staff: 0,
+    admins: 0,
+    managers: 0,
+    members: 0,
+    clients: 0,
     actifs: 0,
     inactifs: 0,
     enAttente: 0
@@ -317,7 +317,7 @@ export class MembresComponent implements OnInit {
   isInviting = false;
   inviteForm: CreateMemberData = {
     email: '',
-    role: 'membre'
+    role: 'member'
   };
 
   // Rôles dynamiques
@@ -326,10 +326,10 @@ export class MembresComponent implements OnInit {
   // Filtres par rôle
   roleFilters = [
     { key: null, label: 'Tous', count: 0 },
-    { key: 'proprietaire', label: 'Propriétaires', count: 0 },
-    { key: 'gestionnaire', label: 'Gestionnaires', count: 0 },
-    { key: 'membre', label: 'Membres', count: 0 },
-    { key: 'staff', label: 'Staff', count: 0 }
+    { key: 'admin', label: 'Administrateurs', count: 0 },
+    { key: 'manager', label: 'Gestionnaires', count: 0 },
+    { key: 'member', label: 'Membres', count: 0 },
+    { key: 'client', label: 'Clients', count: 0 }
   ];
 
   constructor(
@@ -379,10 +379,10 @@ export class MembresComponent implements OnInit {
 
   private updateRoleFilterCounts(): void {
     this.roleFilters[0].count = this.stats.total; // Tous
-    this.roleFilters[1].count = this.stats.proprietaires; // Propriétaires
-    this.roleFilters[2].count = this.stats.gestionnaires; // Gestionnaires
-    this.roleFilters[3].count = this.stats.membres; // Membres
-    this.roleFilters[4].count = this.stats.staff; // Staff
+    this.roleFilters[1].count = this.stats.admins; // Administrateurs
+    this.roleFilters[2].count = this.stats.managers; // Gestionnaires
+    this.roleFilters[3].count = this.stats.members; // Membres
+    this.roleFilters[4].count = this.stats.clients; // Clients
   }
 
   private applyFilters(): void {
@@ -415,11 +415,11 @@ export class MembresComponent implements OnInit {
     const baseClass = 'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0';
     
     switch (member.role) {
-      case 'proprietaire':
+      case 'admin':
         return `${baseClass} bg-purple-600`;
-      case 'gestionnaire':
+      case 'manager':
         return `${baseClass} bg-blue-600`;
-      case 'staff':
+      case 'client':
         return `${baseClass} bg-green-600`;
       default:
         return `${baseClass} bg-gray-500`;
@@ -430,11 +430,11 @@ export class MembresComponent implements OnInit {
     const baseClass = 'px-3 py-1 rounded-full text-sm font-medium';
     
     switch (role) {
-      case 'proprietaire':
+      case 'admin':
         return `${baseClass} bg-purple-100 text-purple-800`;
-      case 'gestionnaire':
+      case 'manager':
         return `${baseClass} bg-blue-100 text-blue-800`;
-      case 'staff':
+      case 'client':
         return `${baseClass} bg-green-100 text-green-800`;
       default:
         return `${baseClass} bg-gray-100 text-gray-800`;
@@ -528,7 +528,7 @@ export class MembresComponent implements OnInit {
     this.showInviteModal = false;
     this.inviteForm = {
       email: '',
-      role: 'membre'
+      role: 'member'
     };
     this.isInviting = false;
   }
@@ -537,7 +537,7 @@ export class MembresComponent implements OnInit {
     this.showInviteModal = true;
     this.inviteForm = {
       email: '',
-      role: 'membre'
+      role: 'member'
     };
   }
 
@@ -545,7 +545,7 @@ export class MembresComponent implements OnInit {
     this.showInviteModal = true;
     this.inviteForm = {
       email: 'mady@yopmail.com', 
-      role: 'membre'
+      role: 'member'
     };
   }
 
