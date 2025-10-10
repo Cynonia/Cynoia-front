@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, first, map, tap, throwError } from 'rxjs';
 import { ApiService, ApiResponse } from './api.service';
 import { AuthService } from './auth.service';
@@ -60,7 +61,7 @@ export class MessagesService {
   // Cache messages per conversation id
   private messagesMap = new Map<number, BehaviorSubject<Message[]>>();
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(private api: ApiService, private auth: AuthService, @Inject(PLATFORM_ID) private platformId: Object) {}
 
   // Normalize API response to support both wrapped { data } and raw payloads
   private extractData<T>(resp: any): T {
@@ -93,6 +94,11 @@ export class MessagesService {
 
   // Conversations
   refreshConversations(): Observable<Conversation[]> {
+    if (!isPlatformBrowser(this.platformId)) {
+      // SSR: avoid network calls during prerender
+      this.conversationsSubject.next([]);
+      return new BehaviorSubject<Conversation[]>([]).asObservable();
+    }
     return this.api.get<Conversation[]>('/chats').pipe(
       map((resp) => {
         const data = this.extractData<any>(resp);
@@ -136,6 +142,9 @@ export class MessagesService {
   }
 
   listMessages(conversationId: number, opts: ListMessagesOptions = {}): Observable<Message[]> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return new BehaviorSubject<Message[]>([]).asObservable();
+    }
     const params: any = {};
     if (opts.limit) params.limit = opts.limit;
     if (opts.cursor) params.cursor = opts.cursor;
@@ -155,6 +164,9 @@ export class MessagesService {
 
   // Creating conversations
   createOrGetPrivateConversation(targetUserId: number): Observable<Conversation> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return throwError(() => new Error('Unavailable during SSR'));
+    }
     // OpenAPI expects { peerUserId }
     const payload = { peerUserId: targetUserId } as any;
     return this.api.post<Conversation>('/chats/private', payload).pipe(
@@ -173,6 +185,9 @@ export class MessagesService {
   }
 
   createGroupConversation(name: string, participantUserIds: number[]): Observable<Conversation> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return throwError(() => new Error('Unavailable during SSR'));
+    }
     // OpenAPI expects { name, memberIds }
     const payload = { name, memberIds: participantUserIds } as any;
     return this.api.post<Conversation>('/chats/group', payload).pipe(
@@ -183,6 +198,9 @@ export class MessagesService {
 
   // Sending messages
   sendMessage(conversationId: number, content: string, kind: string = 'TEXT'): Observable<Message> {
+    if (!isPlatformBrowser(this.platformId)) {
+      return throwError(() => new Error('Unavailable during SSR'));
+    }
     const payload = { conversationId, content, kind };
     return this.api.post<Message>('/chats/message', payload).pipe(
       map((resp) => this.mapMessage(this.extractData<any>(resp))),

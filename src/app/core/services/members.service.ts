@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Observable, map, catchError, throwError, switchMap, of, tap } from 'rxjs';
 import { ApiService } from './api.service';
 import { InvitationService, InvitationRequest } from './invitation.service';
@@ -55,10 +56,13 @@ export class MembersService {
     private api: ApiService,
     private invitationService: InvitationService,
     private authService: AuthService,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // Load members from backend (users by entity) on service init
-    this.refreshMembersFromApi().subscribe();
+    // Load members only in the browser to avoid SSR prerender network calls
+    if (isPlatformBrowser(this.platformId)) {
+      this.refreshMembersFromApi().subscribe();
+    }
   }
 
   // Normalize API responses that may be wrapped or raw arrays
@@ -112,6 +116,11 @@ export class MembersService {
 
   // Fetch members from backend by current or provided entity id
   refreshMembersFromApi(entityId?: number): Observable<MemberProfile[]> {
+    // During SSR, skip network and return empty list
+    if (!isPlatformBrowser(this.platformId)) {
+      this.membersSubject.next([]);
+      return of([]);
+    }
     const entityId$ = entityId ? of(entityId) : this.getCurrentEntityId();
 
     return entityId$.pipe(
