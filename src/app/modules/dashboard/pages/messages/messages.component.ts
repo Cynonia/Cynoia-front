@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MessagingService, Conversation, GroupChat, User, Message } from '../../../../core/services/messaging.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { MessagesService, Conversation as SvcConversation, Message as SvcMessage } from '../../../../core/services/messages.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-messages',
@@ -72,20 +73,7 @@ import { AuthService } from '../../../../core/services/auth.service';
           </div>
         </div>
 
-        <!-- Barre de recherche pour messages privés -->
-        <div *ngIf="activeTab === 'private'" class="p-4 border-b border-gray-200">
-          <div class="relative">
-            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            <input 
-              type="text" 
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="onSearchChange()"
-              placeholder="Rechercher un membre..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
-          </div>
-        </div>
+        
 
         <!-- Liste des conversations/utilisateurs -->
         <div class="flex-1 overflow-y-auto">
@@ -99,9 +87,16 @@ import { AuthService } from '../../../../core/services/auth.service';
                    [class]="getConversationClass(conversation)"
                    class="flex items-center p-3 rounded-lg cursor-pointer transition-colors">
                 <div class="relative">
-                  <img [src]="conversation.participants[0].avatar" 
-                       [alt]="conversation.participants[0].name"
-                       class="w-10 h-10 rounded-full">
+         <img *ngIf="conversation.participants[0].avatar; else noAvatarTpl"
+           [src]="conversation.participants[0].avatar" 
+           [alt]="conversation.participants[0].name"
+           class="w-10 h-10 rounded-full">
+                  <ng-template #noAvatarTpl>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center" 
+                         [ngStyle]="{ backgroundColor: 'var(--primary-color)', color: 'var(--primary-foreground)' }">
+                      <span class="text-sm font-semibold">{{ getInitials(conversation.participants[0].name) }}</span>
+                    </div>
+                  </ng-template>
                   <div *ngIf="conversation.participants[0].isOnline" 
                        class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
@@ -128,49 +123,9 @@ import { AuthService } from '../../../../core/services/auth.service';
               </div>
             </div>
 
-            <!-- Membres connectés -->
-            <div class="p-2">
-              <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide px-3 py-2">
-                Membres connectés ({{ onlineUsers.length }})
-              </h3>
-              <div *ngFor="let user of getFilteredOnlineUsers()" 
-                   (click)="startConversationWith(user)"
-                   class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                <div class="relative">
-                  <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                    <span class="text-white text-sm font-semibold">{{ getInitials(user.name) }}</span>
-                  </div>
-                  <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border border-white rounded-full"></div>
-                </div>
-                <div class="ml-3 flex-1">
-                  <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
-                  <p class="text-xs text-gray-600">{{ user.role | titlecase }}</p>
-                </div>
-              </div>
-            </div>
+            
 
-            <!-- Membres hors ligne -->
-            <div class="p-2" *ngIf="getFilteredOfflineUsers().length > 0">
-              <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wide px-3 py-2">
-                Hors ligne
-              </h3>
-              <div *ngFor="let user of getFilteredOfflineUsers()" 
-                   (click)="startConversationWith(user)"
-                   class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                <div class="relative">
-                  <div class="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                    <span class="text-white text-sm font-semibold">{{ getInitials(user.name) }}</span>
-                  </div>
-                </div>
-                <div class="ml-3 flex-1">
-                  <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
-                  <div class="flex items-center">
-                    <p class="text-xs text-gray-600">{{ user.role | titlecase }}</p>
-                    <span class="text-xs text-gray-500 ml-2">{{ formatLastSeen(user.lastSeen) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            
           </div>
 
           <!-- Chat de groupe -->
@@ -228,8 +183,16 @@ import { AuthService } from '../../../../core/services/auth.service';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                   </svg>
                 </div>
-                <div *ngIf="!isGroupChat(activeConversation)" class="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span class="text-white text-sm font-semibold">{{ getConversationInitials(activeConversation) }}</span>
+                <div *ngIf="!isGroupChat(activeConversation)" class="w-10 h-10 rounded-full flex items-center justify-center">
+                  <ng-container *ngIf="activeConversation.participants[0]?.avatar; else fallbackInitials">
+                    <img [src]="activeConversation.participants[0].avatar" [alt]="getConversationName(activeConversation)" class="w-10 h-10 rounded-full">
+                  </ng-container>
+                  <ng-template #fallbackInitials>
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center" 
+                         [ngStyle]="{ backgroundColor: 'var(--primary-color)', color: 'var(--primary-foreground)' }">
+                      <span class="text-sm font-semibold">{{ getConversationInitials(activeConversation) }}</span>
+                    </div>
+                  </ng-template>
                 </div>
                 <div *ngIf="!isGroupChat(activeConversation) && isUserOnline(activeConversation)" 
                      class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -250,10 +213,11 @@ import { AuthService } from '../../../../core/services/auth.service';
           <div class="flex-1 overflow-y-auto p-4 space-y-4" #messagesContainer>
             <div *ngFor="let message of getActiveMessages()" class="flex" 
                  [class.justify-end]="isMyMessage(message)">
-              <div [class]="getMessageClass(message)" class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
+              <div [class]="getMessageClass(message)" [ngStyle]="getMessageStyle(message)" class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg">
                 <div *ngIf="!isMyMessage(message)" class="flex items-center mb-1">
-                  <div class="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center mr-2">
-                    <span class="text-white text-xs font-semibold">{{ getInitials(message.senderName) }}</span>
+                  <div class="w-6 h-6 rounded-full flex items-center justify-center mr-2" 
+                       [ngStyle]="{ backgroundColor: 'var(--primary-color)', color: 'var(--primary-foreground)' }">
+                    <span class="text-xs font-semibold">{{ getInitials(message.senderName) }}</span>
                   </div>
                   <span class="text-xs font-medium text-gray-700">{{ message.senderName }}</span>
                   <span class="text-xs text-gray-500 ml-2">{{ getRoleDisplay(message) }}</span>
@@ -278,7 +242,8 @@ import { AuthService } from '../../../../core/services/auth.service';
               <button 
                 type="submit" 
                 [disabled]="!newMessage.trim()"
-                class="bg-purple-600 text-white p-2 rounded-full hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                class="p-2 rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                [ngStyle]="{ backgroundColor: 'var(--primary-color)', color: 'var(--primary-foreground)' }">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
@@ -297,6 +262,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   searchQuery = '';
   newMessage = '';
   
+  // Local UI types mirroring the previous mock service shapes
   conversations: Conversation[] = [];
   groupChats: GroupChat[] = [];
   allUsers: User[] = [];
@@ -307,48 +273,87 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   activeMessages: Message[] = [];
   
   currentUser: User | null = null;
+  currentUserId?: number;
   canAccessTeamChat = false;
+  private messagesSub?: Subscription;
 
   constructor(
-    private messagingService: MessagingService,
+    private messagesService: MessagesService,
     private authService: AuthService
   ) {}
 
   ngOnInit() {
-    this.loadCurrentUser();
-    this.loadData();
-    this.checkTeamChatAccess();
+    // Load auth user then bootstrap data
+    this.authService.currentUser$.subscribe(user => {
+      if (user) {
+        this.currentUserId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
+        this.currentUser = {
+          id: (this.currentUserId ?? 0).toString(),
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
+          role: (user.role || 'MEMBER').toString(),
+          avatar: 'https://via.placeholder.com/40',
+          isOnline: true,
+          lastSeen: new Date()
+        };
+        console.log('[Messages] Current user:', {
+          id: this.currentUserId,
+          name: this.currentUser.name,
+          role: this.currentUser.role
+        });
+        this.checkTeamChatAccess(user.role);
+      }
+      this.bootstrapData();
+    });
   }
 
   ngAfterViewChecked() {
     this.scrollToBottom();
   }
 
-  private loadCurrentUser() {
-    this.currentUser = this.messagingService.getCurrentUser();
+  private bootstrapData() {
+    // Load conversations from API-backed MessagesService
+    this.messagesService.refreshConversations().subscribe();
+    this.messagesService.conversations$.subscribe((convs) => {
+      console.log('[Messages] Conversations from backend:', convs);
+      const mapped = convs.map(c => this.mapConversationToUi(c));
+      // Split into private and group for UI needs
+      this.conversations = mapped.filter(c => !this.isGroupChat(c));
+      this.groupChats = convs
+        .filter(c => (c.type || '').toUpperCase() === 'GROUP')
+        .map(c => this.mapConversationToGroupChat(c));
+      console.log('[Messages] Mapped UI conversations:', this.conversations);
+      console.log('[Messages] Group chats:', this.groupChats);
+
+      // Build users list from chat participants (exclude current user, dedupe)
+      const usersMap = new Map<string, User>();
+      for (const conv of convs) {
+        if (!Array.isArray(conv.participants)) continue;
+        for (const p of conv.participants) {
+          if (this.currentUserId && p.userId === this.currentUserId) continue;
+          const id = String(p.userId);
+          if (!usersMap.has(id)) {
+            const name = p.user ? `${p.user.firstName || ''} ${p.user.lastName || ''}`.trim() : `Utilisateur ${p.userId}`;
+            usersMap.set(id, {
+              id,
+              name: name || `Utilisateur ${id}`,
+              role: '',
+              avatar: p.user?.avatar || 'https://via.placeholder.com/40',
+              // Backend doesn't provide presence yet; mark as online for discoverability
+              isOnline: true
+            });
+          }
+        }
+      }
+      this.allUsers = Array.from(usersMap.values());
+      this.onlineUsers = this.allUsers.filter(u => u.isOnline);
+      this.offlineUsers = this.allUsers.filter(u => !u.isOnline);
+      console.log('[Messages] Derived users from chats:', this.allUsers);
+    });
   }
 
-  private loadData() {
-    // Charger les conversations
-    this.messagingService.conversations$.subscribe((conversations: Conversation[]) => {
-      this.conversations = conversations;
-    });
-
-    // Charger les chats de groupe
-    this.messagingService.groupChats$.subscribe((groupChats: GroupChat[]) => {
-      this.groupChats = groupChats;
-    });
-
-    // Charger les utilisateurs
-    this.messagingService.users$.subscribe((users: User[]) => {
-      this.allUsers = users;
-      this.onlineUsers = users.filter((user: User) => user.isOnline);
-      this.offlineUsers = users.filter((user: User) => !user.isOnline);
-    });
-  }
-
-  private checkTeamChatAccess() {
-    this.canAccessTeamChat = this.messagingService.canAccessTeamChat();
+  private checkTeamChatAccess(role?: string) {
+    const allowedRoles = ['MANAGER', 'OWNER', 'STAFF', 'GESTIONNAIRE', 'PROPRIETAIRE'];
+    this.canAccessTeamChat = !!role && allowedRoles.includes(role.toUpperCase());
   }
 
   // Gestion des onglets
@@ -387,6 +392,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
 
   // Conversations
   selectConversation(conversation: Conversation) {
+    console.log('[Messages] Selecting conversation:', conversation);
     this.activeConversation = conversation;
     this.loadMessages();
     // Marquer comme lu
@@ -401,28 +407,40 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   }
 
   startConversationWith(user: User) {
-    // Vérifier si une conversation existe déjà
-    let conversation = this.conversations.find((conv: Conversation) => 
-      conv.participants.some((p: User) => p.id === user.id)
-    );
-
-    if (!conversation) {
-      // Créer nouvelle conversation
-      conversation = this.messagingService.createConversation([user]);
-      this.conversations.unshift(conversation);
+    // Try to create or retrieve a private conversation via API
+    const targetId = typeof user.id === 'string' ? parseInt(user.id, 10) : (user.id as unknown as number);
+    if (!targetId || Number.isNaN(targetId)) {
+      console.warn('Cannot start conversation: invalid user id', user);
+      return;
     }
-
-    this.selectConversation(conversation);
+    this.messagesService.createOrGetPrivateConversation(targetId).subscribe((conv) => {
+      const uiConv = this.mapConversationToUi(conv);
+      // Prepend if not existing
+      if (!this.conversations.find(c => c.id === uiConv.id)) {
+        this.conversations.unshift(uiConv);
+      }
+      this.selectConversation(uiConv);
+    });
   }
 
   private loadMessages() {
     if (!this.activeConversation) return;
     
-    if (this.isGroupChat(this.activeConversation)) {
-      this.activeMessages = this.messagingService.getGroupChatMessages(this.activeConversation.id);
-    } else {
-      this.activeMessages = this.messagingService.getConversationMessages(this.activeConversation.id);
+    const convId = Number(this.activeConversation.id);
+    // avoid stacking subscriptions when switching conversations
+    if (this.messagesSub) {
+      this.messagesSub.unsubscribe();
+      this.messagesSub = undefined;
     }
+    console.log('[Messages] Loading messages for conversation id:', convId);
+    this.messagesService.listMessages(convId).subscribe(msgs => {
+      console.log('[Messages] listMessages returned', msgs?.length, 'messages');
+    });
+    this.messagesSub = this.messagesService.messages$(convId).subscribe((msgs) => {
+      console.log('[Messages] messages$ update:', msgs?.length, 'messages');
+      this.activeMessages = msgs.map(this.mapSvcMessageToUi);
+      this.scrollToBottom();
+    });
   }
 
   // Classes CSS
@@ -445,9 +463,17 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   getMessageClass(message: Message): string {
     const baseClass = 'max-w-xs lg:max-w-md px-4 py-2 rounded-lg';
     if (this.isMyMessage(message)) {
-      return baseClass + ' bg-purple-600 text-white';
+      // Colors handled via getMessageStyle with CSS variables
+      return baseClass;
     }
     return baseClass + ' bg-gray-100 text-gray-900';
+  }
+
+  getMessageStyle(message: Message): { [k: string]: string } | null {
+    if (this.isMyMessage(message)) {
+      return { backgroundColor: 'var(--primary-color)', color: 'var(--primary-foreground)' };
+    }
+    return null;
   }
 
   // Helpers
@@ -575,23 +601,12 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   sendMessage() {
     if (!this.newMessage.trim() || !this.activeConversation || !this.currentUser) return;
 
-    if (this.isGroupChat(this.activeConversation)) {
-      this.messagingService.sendMessage(this.activeConversation.id, this.newMessage.trim());
-    } else {
-      this.messagingService.sendMessage(this.activeConversation.id, this.newMessage.trim());
-    }
-
-    this.activeMessages.push({
-      id: Date.now().toString(),
-      senderId: this.currentUser.id,
-      senderName: this.currentUser.name,
-      content: this.newMessage.trim(),
-      timestamp: new Date(),
-      conversationId: this.activeConversation.id
+    const convId = Number(this.activeConversation.id);
+    this.messagesService.sendMessage(convId, this.newMessage.trim()).subscribe(() => {
+      // messages$ subscription will update the list
+      this.newMessage = '';
+      this.scrollToBottom();
     });
-
-    this.newMessage = '';
-    this.scrollToBottom();
   }
 
   private scrollToBottom() {
@@ -601,4 +616,104 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
       } catch (err) {}
     }
   }
+
+  // Mapping helpers
+  private mapSvcMessageToUi(m: SvcMessage): Message {
+    const senderName = m.sender ? `${m.sender.firstName || ''} ${m.sender.lastName || ''}`.trim() : `Utilisateur ${m.senderId}`;
+    return {
+      id: String(m.id),
+      senderId: String(m.senderId),
+      senderName: senderName || String(m.senderId),
+      content: m.content,
+      timestamp: m.createdAt ? new Date(m.createdAt) : new Date(),
+      conversationId: m.conversationId
+    };
+  }
+
+  private mapConversationToUi(c: SvcConversation): Conversation {
+    const participants: User[] = [];
+    const currentId = this.currentUserId;
+    if (Array.isArray(c.participants) && c.participants.length > 0) {
+      const other = c.participants.find(p => !currentId || p.userId !== currentId) || c.participants[0];
+      const name = other?.user ? `${other.user.firstName || ''} ${other.user.lastName || ''}`.trim() : `Utilisateur ${other?.userId ?? ''}`;
+      participants.push({
+        id: String(other?.userId ?? ''),
+        name: name || 'Utilisateur',
+        role: '',
+        avatar: other?.user?.avatar || undefined,
+        isOnline: true
+      });
+    }
+    const last = c.lastMessage || (Array.isArray(c.messages) && c.messages.length > 0 ? c.messages[c.messages.length - 1] : undefined);
+    const lastUi = last ? this.mapSvcMessageToUi(last) : undefined;
+    return {
+      id: c.id,
+      participants,
+      lastMessage: lastUi,
+      unreadCount: 0
+    };
+  }
+
+  private mapConversationToGroupChat(c: SvcConversation): GroupChat {
+    const participants: User[] = (c.participants || []).map(p => ({
+      id: String(p.userId),
+      name: p.user ? `${p.user.firstName || ''} ${p.user.lastName || ''}`.trim() : `Utilisateur ${p.userId}`,
+      role: '',
+      avatar: p.user?.avatar || 'https://via.placeholder.com/40',
+      isOnline: false
+    }));
+    const last = c.lastMessage || (Array.isArray(c.messages) && c.messages.length > 0 ? c.messages[c.messages.length - 1] : undefined);
+    const lastUi = last ? this.mapSvcMessageToUi(last) : undefined;
+    return {
+      id: c.id,
+      name: c.name || 'Groupe',
+      type: 'workers',
+      participants,
+      unreadCount: 0,
+      lastMessage: lastUi
+    };
+  }
 }
+
+// Local UI model interfaces (kept compatible with the existing template)
+interface User {
+  id: string;
+  name: string;
+  role: string;
+  avatar?: string;
+  isOnline: boolean;
+  lastSeen?: Date;
+}
+
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  timestamp: Date;
+  conversationId?: string | number;
+}
+
+interface Conversation {
+  id: string | number;
+  participants: User[];
+  lastMessage?: Message;
+  unreadCount: number;
+}
+
+interface GroupChat {
+  id: string | number;
+  name: string;
+  type: 'workers' | 'team';
+  participants: User[];
+  unreadCount: number;
+  lastMessage?: Message;
+}
+
+// Mapping helpers
+// Map backend conversation to UI conversation (private chat)
+// For private chats, we display the other participant as the first participant
+// For group chats, use separate mapping to GroupChat
+// If data is missing, fall back to reasonable defaults
+//
+// Note: relies on this.currentUserId being set
