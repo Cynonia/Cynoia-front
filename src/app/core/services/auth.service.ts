@@ -5,6 +5,7 @@ import { ApiService, ApiResponse } from './api.service';
 import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
 import { registerDto } from '../../../types/registerDto';
+import { EntityRegisterDto } from '../../../types/entityRegisterDto';
 import { environment } from '../../../environments/environment';
 
 export interface SignInCredentials {
@@ -91,6 +92,13 @@ export class AuthService {
     };
     return this.api.post<{ user: User; token: string }>(`${this.AUTH_ENDPOINT}/register`, userData).pipe(
       tap((response) => this.setAuthData({ success: response.success, message: response.message || '', data: response.data } as any)),
+      catchError((error) => throwError(() => error))
+    );
+  }
+
+  // Register a client user into an entity using invitation token
+  entityRegister(payload: EntityRegisterDto): Observable<ApiResponse<unknown>> {
+    return this.api.post<unknown>(`${this.AUTH_ENDPOINT}/entity/register`, payload).pipe(
       catchError((error) => throwError(() => error))
     );
   }

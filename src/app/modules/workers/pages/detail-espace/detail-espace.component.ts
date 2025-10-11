@@ -45,9 +45,7 @@ export class DetailEspaceComponent implements OnInit {
   
   }
 
-  goBack(): void {
-    this.router.navigate(['/workers/espaces-disponibles']);
-  }
+  // Back button removed
 
   getSpaceLocation(): string {
     if (!this.space) return '';

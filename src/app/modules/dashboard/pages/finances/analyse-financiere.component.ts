@@ -13,11 +13,6 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <button (click)="goBack()" class="p-2 hover:bg-gray-100 rounded-lg">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Analyse financière</h1>
             <p class="text-gray-600">Suivi des revenus, paiements et performance financière</p>
@@ -553,9 +548,7 @@ export class AnalyseFinanciereComponent implements OnInit {
     // });
   }
 
-  goBack() {
-    this.router.navigate(['/dashboard']);
-  }
+  // Back button removed
 
   navigateToPayments() {
     this.router.navigate(['/dashboard/finances/paiements']);

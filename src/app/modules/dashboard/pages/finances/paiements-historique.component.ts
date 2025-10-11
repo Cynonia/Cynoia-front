@@ -13,11 +13,6 @@ import { FinanceService, Payment } from '../../../../core/services/finance.servi
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <button (click)="goBack()" class="p-2 hover:bg-gray-100 rounded-lg">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </button>
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Historique des paiements</h1>
             <p class="text-gray-600">Gestion détaillée des paiements et facturations</p>
@@ -645,9 +640,7 @@ export class PaiementsHistoriqueComponent implements OnInit {
     // Implémenter l'export
   }
 
-  goBack() {
-    this.router.navigate(['/dashboard/finances']);
-  }
+  // Back button removed
 
   // Utilitaires
   trackByPayment(index: number, payment: Payment): string {

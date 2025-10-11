@@ -87,13 +87,7 @@ export class ReservationComponent implements OnInit {
     }
   }
 
-  goBack(): void {
-    if (this.space) {
-      this.router.navigate(['/workers/detail-espace', this.space.id]);
-    } else {
-      this.router.navigate(['/workers/espaces-disponibles']);
-    }
-  }
+  // Back button removed
 
   selectTimeSlot(slot: any): void {
     if (slot.available) {

@@ -118,7 +118,7 @@ import { takeUntil } from 'rxjs/operators';
       </div>
 
       <!-- Main Content -->
-      <div class="ml-64">
+  <div class="ml-64 flex flex-col min-h-screen overflow-hidden">
         <!-- Top Header -->
         <header class="bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center">
           <div>
@@ -155,8 +155,10 @@ import { takeUntil } from 'rxjs/operators';
         </header>
 
         <!-- Page Content -->
-        <main class="p-6">
-          <router-outlet></router-outlet>
+        <main class="p-6 flex-1 min-h-0 overflow-hidden flex">
+          <div class="flex-1 min-h-0">
+            <router-outlet></router-outlet>
+          </div>
         </main>
       </div>
     </div>

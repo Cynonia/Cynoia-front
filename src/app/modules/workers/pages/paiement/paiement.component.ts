@@ -19,15 +19,8 @@ interface PaymentMethod {
   imports: [CommonModule, FormsModule],
   template: `
     <div *ngIf="reservationData" class="space-y-6">
-      <!-- Navigation de retour -->
+      <!-- En-tête -->
       <div class="flex items-center gap-3">
-        <button 
-          (click)="goBack()" 
-          class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
-        </button>
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Paiement</h1>
           <p class="text-gray-600">Finaliser votre réservation</p>
@@ -294,13 +287,7 @@ export class PaiementComponent implements OnInit {
     this.reservationData = this.store.getPendingReservation();
   }
 
-  goBack(): void {
-    if (this.reservationData?.space?.id) {
-      this.router.navigate(['/workers/reservation', this.reservationData.space.id]);
-    } else {
-      this.router.navigate(['/workers/espaces-disponibles']);
-    }
-  }
+  // Back button removed
 
   goToSpaces(): void {
     this.router.navigate(['/workers/espaces-disponibles']);
