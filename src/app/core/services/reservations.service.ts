@@ -440,13 +440,14 @@ export class ReservationsService {
   getReservationStats(): ReservationStats {
     const reservations = this.reservationsSubject.value;
 
-    console.log(reservations);
-    
     return {
       total: reservations.length,
-      enAttente: reservations.filter((r) => r.status === 'en-cours').length,
-      confirmees: reservations.filter((r) => r.status === 'confirmee').length,
-      rejetees: reservations.filter((r) => r.status === 'rejetee').length,
+      enAttente: reservations.filter((r) => {
+        const s = ReservationsService.normalizeReservationStatus((r as any).status);
+        return s === 'en-attente' || s === 'en-cours';
+      }).length,
+      confirmees: reservations.filter((r) => ReservationsService.normalizeReservationStatus((r as any).status) === 'confirmee').length,
+      rejetees: reservations.filter((r) => ReservationsService.normalizeReservationStatus((r as any).status) === 'rejetee').length,
       annulees: reservations.filter((r) => {
         const s = (r as any).status?.toString().toLowerCase();
         return s === 'annulee' || s === 'cancelled' || s === 'cancel' || s === 'annule';

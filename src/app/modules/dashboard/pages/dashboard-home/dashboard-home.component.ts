@@ -50,16 +50,16 @@ import { takeUntil } from 'rxjs/operators';
       </div>
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         <!-- En attente -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <div class="flex items-center">
+        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+          <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
-                class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center"
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center"
               >
                 <svg
-                  class="w-6 h-6 text-orange-600"
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -73,29 +73,29 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">
+            <div class="ml-3 sm:ml-4 min-w-0">
+              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
                 Réservations en attente
               </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                   {{ stats.enAttente }}
                 </p>
-                <p class="text-sm text-gray-500 ml-2">À valider</p>
+                <p class="text-xs sm:text-sm text-gray-500 ml-2">À valider</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Confirmées -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <div class="flex items-center">
+        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+          <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
-                class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center"
               >
                 <svg
-                  class="w-6 h-6 text-green-600"
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -109,12 +109,12 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">
+            <div class="ml-3 sm:ml-4 min-w-0">
+              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
                 Réservations confirmées
               </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                   {{ stats.confirmees }}
                 </p>
               </div>
@@ -122,14 +122,14 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <div class="flex items-center">
+        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+          <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
-                class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center"
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center"
               >
                 <svg
-                  class="w-6 h-6 text-red-600"
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -143,12 +143,12 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">
+            <div class="ml-3 sm:ml-4 min-w-0">
+              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
                 Réservations annulées
               </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                   {{ stats.annulees }}
                 </p>
               </div>
@@ -157,14 +157,14 @@ import { takeUntil } from 'rxjs/operators';
         </div>
 
         <!-- Espaces disponibles -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
-          <div class="flex items-center">
+        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+          <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
-                class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"
+                class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center"
               >
                 <svg
-                  class="w-6 h-6 text-blue-600"
+                  class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -178,15 +178,15 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-4">
-              <h3 class="text-lg font-medium text-gray-700">
+            <div class="ml-3 sm:ml-4 min-w-0">
+              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
                 Espaces disponibles
               </h3>
               <div class="flex items-baseline">
-                <p class="text-3xl font-bold text-gray-900">
+                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
                   {{ availableSpacesCount }}
                 </p>
-                <p class="text-sm text-gray-500 ml-2">Espaces actifs</p>
+                <p class="text-xs sm:text-sm text-gray-500 ml-2">Espaces actifs</p>
               </div>
             </div>
           </div>
@@ -372,11 +372,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private calculateStats(reservations: any[]): ReservationStats {
     return {
       total: reservations.length,
-      enAttente: reservations.filter(
-        (r) =>
-          ReservationsService.normalizeReservationStatus(r.status) ===
-          'en-attente'
-      ).length,
+      enAttente: reservations.filter((r) => {
+        const s = ReservationsService.normalizeReservationStatus(r.status);
+        return s === 'en-attente' || s === 'en-cours';
+      }).length,
       confirmees: reservations.filter(
         (r) =>
           ReservationsService.normalizeReservationStatus(r.status) ===
