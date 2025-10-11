@@ -11,6 +11,7 @@ import {
   throwError,
 } from 'rxjs';
 import { SpacesService, Space } from './spaces.service';
+import { EspaceService } from './espace.service';
 import { ApiService, ApiResponse } from './api.service';
 import { AuthService } from './auth.service';
 
@@ -110,7 +111,8 @@ export class ReservationsService {
   constructor(
     private spacesService: SpacesService,
     private api: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
+    private espaceService: EspaceService
   ) {
     // Populate initial state from API
     this.refreshFromApi();
@@ -269,14 +271,75 @@ export class ReservationsService {
 
 
   private populateSpaceInfo(reservations: Reservation[]): void {
+    // First, try to resolve from local cache (SpacesService) or embedded reservation.espace
     const updatedReservations = reservations.map((reservation) => {
-      const spaceId = reservation.spaceId ?? reservation.espace?.id ?? '';
+      const rawId = reservation.spaceId ?? reservation.espace?.id ?? '' as any;
+      const spaceId = rawId !== null && rawId !== undefined ? String(rawId) : '';
+      const localSpace = this.spacesService.getSpaceById(spaceId);
       return {
         ...reservation,
-        space: this.spacesService.getSpaceById(spaceId),
+        space: localSpace,
       };
     });
     this.reservationsSubject.next(updatedReservations);
+
+    // Then, for any reservations still missing space details, fetch from backend using getEspaceById
+    const missingIds = Array.from(new Set(
+      updatedReservations
+        .filter(r => !r.space)
+        .map(r => (r.spaceId ?? r.espace?.id))
+        .map(id => id !== null && id !== undefined ? Number(id as any) : NaN)
+        .filter(n => !Number.isNaN(n))
+    ));
+
+    if (missingIds.length === 0) return;
+
+    missingIds.forEach(numericId => {
+      if (isNaN(numericId)) return;
+      this.espaceService.getById(numericId).pipe(first()).subscribe({
+        next: (resp) => {
+          const e = resp?.data as any;
+          if (!e) return;
+          const enriched: Space = this.mapEspaceToSpace(e);
+          const current = this.reservationsSubject.value;
+          const patched = current.map(r => {
+            const rId = (r.spaceId ?? r.espace?.id ?? '') as any;
+            const rIdStr = rId !== null && rId !== undefined ? String(rId) : '';
+            return rIdStr === String(numericId) ? { ...r, space: enriched } : r;
+          });
+          this.reservationsSubject.next(patched);
+        },
+        error: () => {
+          // Ignore individual fetch errors; leave reservation.space undefined
+        }
+      });
+    });
+  }
+
+  private mapEspaceToSpace(espace: any): Space {
+    return {
+      id: String(espace.id),
+      name: espace.name,
+      type: this.mapTypeIdToType(espace.typeEspacesId),
+      description: espace.description || '',
+      capacity: espace.capacity ?? 0,
+      price: espace.pricePerHour ?? 0,
+      availability: '8h-18h',
+      status: espace.status === false ? false : true,
+      image: Array.isArray(espace.images) && espace.images.length > 0 ? espace.images[0] : undefined,
+      features: [],
+      createdAt: new Date(espace.createdAt || Date.now()),
+      updatedAt: new Date(espace.updatedAt || Date.now()),
+    };
+  }
+
+  private mapTypeIdToType(typeId: number): 'bureau' | 'salle' | 'equipement' {
+    switch (typeId) {
+      case 2: return 'bureau';
+      case 3: return 'equipement';
+      case 1:
+      default: return 'salle';
+    }
   }
 
   private saveReservations(reservations: Reservation[]): void {
