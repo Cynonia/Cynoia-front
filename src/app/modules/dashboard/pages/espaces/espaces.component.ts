@@ -235,13 +235,13 @@ interface UiSpace {
       <!-- Grille des espaces -->
       <div
         *ngIf="filteredSpaces.length > 0"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
       >
         <div
           *ngFor="let space of filteredSpaces"
-          class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow"
+          class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow h-full"
         >
-          <div class="h-48 bg-gray-200 relative overflow-hidden">
+          <div class="h-32 bg-gray-200 relative overflow-hidden">
             <img
               *ngIf="space.image"
               [src]="space.image"
@@ -266,10 +266,10 @@ interface UiSpace {
                 />
               </svg>
             </div>
-            <div class="absolute top-3 right-3 flex gap-2">
+            <div class="absolute top-2 right-2 flex gap-1.5">
               <button
                 (click)="editSpace(space)"
-                class="p-2 bg-white/90 hover:bg-white rounded-lg shadow-sm transition-colors"
+                class="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm transition-colors"
                 type="button"
               >
                 <svg
@@ -288,7 +288,7 @@ interface UiSpace {
               </button>
               <button
                 (click)="deleteSpace(space)"
-                class="p-2 bg-white/90 hover:bg-white rounded-lg shadow-sm transition-colors"
+                class="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm transition-colors"
                 type="button"
               >
                 <svg
@@ -308,31 +308,31 @@ interface UiSpace {
             </div>
           </div>
 
-          <div class="p-4">
-            <div class="flex items-center justify-between mb-3">
+          <div class="p-3">
+            <div class="flex items-center justify-between mb-2">
               <span
                 [ngClass]="getTypeBadgeClass(space.type)"
-                class="px-2 py-1 text-xs font-medium rounded-full"
+                class="px-2 py-0.5 text-[10px] font-medium rounded-full"
               >
                 {{ getTypeLabel(space.type) }}
               </span>
               <span
                 [ngClass]="getStatusBadgeClass(space.status)"
-                class="px-2 py-1 text-xs font-medium rounded-full"
+                class="px-2 py-0.5 text-[10px] font-medium rounded-full"
               >
                 {{ getStatusLabel(space.status) }}
               </span>
             </div>
 
-            <h3 class="font-semibold text-gray-900 mb-2">{{ space.name }}</h3>
-            <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+            <h3 class="text-base font-semibold text-gray-900 mb-1 truncate">{{ space.name }}</h3>
+            <p class="text-xs text-gray-600 mb-2 line-clamp-2">
               {{ space.description }}
             </p>
 
-            <div class="space-y-2 mb-4">
-              <div class="flex items-center text-sm text-gray-600">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 mb-3">
+              <div class="flex items-center text-xs text-gray-600">
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4 mr-1.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -349,10 +349,10 @@ interface UiSpace {
 
               <div
                 *ngIf="space.surface"
-                class="flex items-center text-sm text-gray-600"
+                class="flex items-center text-xs text-gray-600"
               >
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4 mr-1.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -369,10 +369,10 @@ interface UiSpace {
 
               <div
                 *ngIf="space.location"
-                class="flex items-center text-sm text-gray-600"
+                class="flex items-center text-xs text-gray-600"
               >
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4 mr-1.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -393,9 +393,9 @@ interface UiSpace {
                 {{ space.location }}
               </div>
 
-              <div class="flex items-center text-sm text-gray-600">
+              <div class="flex items-center text-xs text-gray-600">
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4 mr-1.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -412,10 +412,10 @@ interface UiSpace {
 
               <div
                 *ngIf="space.entity"
-                class="flex items-center text-sm text-gray-600"
+                class="flex items-center text-xs text-gray-600"
               >
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="w-4 h-4 mr-1.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -432,7 +432,7 @@ interface UiSpace {
             </div>
 
             <div class="flex items-center justify-between">
-              <div class="text-lg font-bold text-green-600">
+              <div class="text-base font-bold text-green-600">
                 {{ space.price | number }} FCFA/heure
               </div>
             </div>

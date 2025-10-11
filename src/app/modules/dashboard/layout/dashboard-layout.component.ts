@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { BrandingService, Organization } from '../../../core/services/branding.service';
+import { ReservationsService, Reservation } from '../../../core/services/reservations.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -55,8 +58,9 @@ import { BrandingService, Organization } from '../../../core/services/branding.s
               <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"/>
             </svg>
             Réservations
-            <span class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              1
+            <span *ngIf="pendingReservationsCount > 0"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 transform bg-red-500 text-white text-xs rounded-full h-5 px-2 flex items-center justify-center">
+              {{ pendingReservationsCount > 99 ? '99+' : pendingReservationsCount }}
             </span>
           </a>
 
@@ -184,10 +188,13 @@ export class DashboardLayoutComponent implements OnInit {
   showUserMenu = false;
   branding: Organization | null = null;
   primaryColor = '#6B46C1'; // Couleur par défaut si pas définie
+  pendingReservationsCount = 0;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
     private brandingService: BrandingService,
+    private reservationsService: ReservationsService,
     private router: Router
   ) {}
 
@@ -208,6 +215,36 @@ export class DashboardLayoutComponent implements OnInit {
       this.spaceDescription = this.branding.description;
       this.spaceInitials = this.getInitials(this.branding.name);
     }
+
+    // Initialize pending reservations count from current cache
+    const initial = this.reservationsService.getAllReservations?.() ?? [];
+    this.pendingReservationsCount = (initial || []).filter((r: any) => {
+      const s = ReservationsService.normalizeReservationStatus(r.status);
+      return s === 'en-attente' || s === 'en-cours';
+    }).length;
+
+    // Subscribe to updates
+    this.reservationsService.reservations$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((reservations: Reservation[]) => {
+        this.pendingReservationsCount = (reservations || []).filter((r: any) => {
+          const s = ReservationsService.normalizeReservationStatus(r.status);
+          return s === 'en-attente' || s === 'en-cours';
+        }).length;
+      });
+
+    // Trigger fetch if none loaded yet
+    if (!initial || initial.length === 0) {
+      this.reservationsService.getReservations().subscribe({
+        next: () => {},
+        error: () => {},
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getInitials(name: string): string {

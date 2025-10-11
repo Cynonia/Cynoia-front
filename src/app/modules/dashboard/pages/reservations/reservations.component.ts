@@ -215,7 +215,7 @@ import { takeUntil, first } from 'rxjs/operators';
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.startTime) }}</span>
+                    <span>{{ formatDate(reservation.reservationDate) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
@@ -290,7 +290,7 @@ import { takeUntil, first } from 'rxjs/operators';
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                    <span>{{ formatDate(reservation.startTime) }}</span>
+                    <span>{{ formatDate(reservation.reservationDate) }}</span>
                   </div>
                   
                   <div class="flex items-center gap-2">
@@ -512,21 +512,47 @@ export class ReservationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  formatDate(dateString: string|Date): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+  formatDate(dateInput: string|Date|undefined|null): string {
+    if (!dateInput) return '';
+    try {
+      if (dateInput instanceof Date) {
+        if (isNaN(dateInput.getTime())) return '';
+        return dateInput.toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      }
+      // if string like '2025-10-11' or ISO, Date can parse; if HH:mm, this isn't a date
+      if (/^\d{1,2}:\d{2}$/.test(dateInput)) return '';
+      const d = new Date(dateInput);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch {
+      return '';
+    }
   }
 
-  formatTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  formatTime(timeOrDate: string|Date|undefined|null): string {
+    if (!timeOrDate) return '';
+    try {
+      if (timeOrDate instanceof Date) {
+        if (isNaN(timeOrDate.getTime())) return '';
+        return timeOrDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+      const str = String(timeOrDate).trim();
+      // Support 'HH:mm' input directly
+      const hhmm = str.match(/^(\d{1,2}):(\d{2})$/);
+      if (hhmm) {
+        const h = Math.min(23, Math.max(0, parseInt(hhmm[1], 10)));
+        const m = Math.min(59, Math.max(0, parseInt(hhmm[2], 10)));
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      }
+      // Otherwise, parse as date string
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
   }
 
   navigateToCalendar(): void {

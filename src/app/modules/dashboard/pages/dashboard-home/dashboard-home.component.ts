@@ -50,9 +50,9 @@ import { takeUntil } from 'rxjs/operators';
       </div>
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <!-- En attente -->
-        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+  <div class="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 h-full">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
@@ -74,21 +74,21 @@ import { takeUntil } from 'rxjs/operators';
               </div>
             </div>
             <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
+              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
                 Réservations en attente
               </h3>
               <div class="flex items-baseline">
-                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">
                   {{ stats.enAttente }}
                 </p>
-                <p class="text-xs sm:text-sm text-gray-500 ml-2">À valider</p>
+                <p class="text-xs text-gray-500 ml-2">À valider</p>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Confirmées -->
-        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+  <div class="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 h-full">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
@@ -110,11 +110,11 @@ import { takeUntil } from 'rxjs/operators';
               </div>
             </div>
             <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
+              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
                 Réservations confirmées
               </h3>
               <div class="flex items-baseline">
-                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">
                   {{ stats.confirmees }}
                 </p>
               </div>
@@ -122,7 +122,7 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+  <div class="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 h-full">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
@@ -144,11 +144,11 @@ import { takeUntil } from 'rxjs/operators';
               </div>
             </div>
             <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
+              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
                 Réservations annulées
               </h3>
               <div class="flex items-baseline">
-                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">
                   {{ stats.annulees }}
                 </p>
               </div>
@@ -157,7 +157,7 @@ import { takeUntil } from 'rxjs/operators';
         </div>
 
         <!-- Espaces disponibles -->
-        <div class="bg-white p-4 sm:p-6 rounded-lg border border-gray-200 h-full">
+  <div class="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 h-full">
           <div class="flex items-center min-w-0">
             <div class="flex-shrink-0">
               <div
@@ -179,14 +179,14 @@ import { takeUntil } from 'rxjs/operators';
               </div>
             </div>
             <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-base sm:text-lg font-medium text-gray-700 truncate">
+              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
                 Espaces disponibles
               </h3>
               <div class="flex items-baseline">
-                <p class="text-2xl sm:text-3xl font-bold text-gray-900">
+                <p class="text-xl sm:text-2xl font-bold text-gray-900">
                   {{ availableSpacesCount }}
                 </p>
-                <p class="text-xs sm:text-sm text-gray-500 ml-2">Espaces actifs</p>
+                <p class="text-xs text-gray-500 ml-2">Espaces actifs</p>
               </div>
             </div>
           </div>
@@ -453,7 +453,6 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   approveReservation(reservationId: string): void {
     this.reservationsService.acceptReservationApi(reservationId).subscribe({
       next: (res) => {
-        // reload dashboard data from server
         this.loadDashboardData();
       },
       error: (err) => {

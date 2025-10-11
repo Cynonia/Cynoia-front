@@ -10,6 +10,7 @@ import {
   tap,
   throwError,
 } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { SpacesService, Space } from './spaces.service';
 import { EspaceService } from './espace.service';
 import { ApiService, ApiResponse } from './api.service';
@@ -114,25 +115,20 @@ export class ReservationsService {
     private authService: AuthService,
     private espaceService: EspaceService
   ) {
-    // Populate initial state from API
-    this.refreshFromApi();
+    // Do not auto-fetch on construction; we'll lazy-load on demand and cache
   }
 
   /**
    * Refresh reservations and members from the API and populate local subjects.
    */
+  // Cache to dedupe in-flight and subsequent loads
+  private reservationsLoadInFlight$?: Observable<Reservation[]>;
+  private reservationsLoaded = false;
+
   refreshFromApi(): void {
-    this.getReservations().pipe(first()).subscribe({
-      next: (reservations) => {
-        // populateSpaceInfo already calls next on the reservations subject
-        console.debug('[ReservationsService] fetched', reservations.length, 'reservations from API');
-        this.reservationsSubject.next(reservations);
-        // Derive members from reservations if none provided by API
-        const members: Member[] = reservations
-          .map(r => r.member)
-          .filter((m): m is Member => !!m);
-        if (members.length > 0) this.membersSubject.next(members);
-      },
+    // Force refresh, start a single network call and update subjects
+    this.getReservations(true).pipe(first()).subscribe({
+      next: () => {},
       error: (err) => {
         console.error('Unable to refresh reservations from API:', err);
         this.reservationsSubject.next([]);
@@ -140,35 +136,61 @@ export class ReservationsService {
     });
   }
 
-  getReservations(): Observable<Reservation[]> {
-    return this.currentUser$.pipe(
-      first(),
-      switchMap((currentUser) => {
-        if (!currentUser || !currentUser.entity?.id) {
-          // No authenticated user yet - return empty list
-          return new Observable<ApiResponse<Reservation[]>>(subscriber => {
-            subscriber.next({ data: [], success: true });
-            subscriber.complete();
-          });
-        }
-        return this.api.get<Reservation[]>(`${this.endpoint}/entity/${currentUser.entity.id}`);
-      }),
-      map((response: ApiResponse<Reservation[]>) => {
-        const reservations = (response.data || []).map((reservation: any) => ({
-          ...reservation,
-          reservationDate: new Date(reservation.reservationDate || reservation.date),
-          createdAt: new Date(reservation.createdAt),
-          updatedAt: new Date(reservation.updatedAt),
-        }));
+  /**
+   * Returns reservations, loading them once and sharing the result.
+   * Pass force=true to bypass cache and re-fetch.
+   */
+  getReservations(force: boolean = false): Observable<Reservation[]> {
+    if (!force && (this.reservationsLoaded || this.reservationsLoadInFlight$)) {
+      // Already loaded or loading; just return the subject observable
+      return this.reservations$;
+    }
 
-        this.populateSpaceInfo(reservations);
-        return reservations;
-      }),
-      catchError((error) => {
-        console.error('Erreur lors du chargement des réservations :', error);
-        return throwError(() => error);
-      })
-    );
+    if (!this.reservationsLoadInFlight$) {
+      this.reservationsLoadInFlight$ = this.currentUser$.pipe(
+        first(),
+        switchMap((currentUser) => {
+          if (!currentUser || !currentUser.entity?.id) {
+            // No authenticated user yet - return empty list
+            return new Observable<ApiResponse<Reservation[]>>(subscriber => {
+              subscriber.next({ data: [], success: true });
+              subscriber.complete();
+            });
+          }
+          return this.api.get<Reservation[]>(`${this.endpoint}/entity/${currentUser.entity.id}`);
+        }),
+        map((response: ApiResponse<Reservation[]>) => {
+          const reservations = (response.data || []).map((reservation: any) => ({
+            ...reservation,
+            reservationDate: new Date(reservation.reservationDate || reservation.date),
+            createdAt: new Date(reservation.createdAt),
+            updatedAt: new Date(reservation.updatedAt),
+          }));
+
+          this.populateSpaceInfo(reservations);
+          return reservations;
+        }),
+        tap((reservations) => {
+          // push into subject and derive members once
+          this.reservationsSubject.next(reservations);
+          const members: Member[] = reservations
+            .map(r => r.member)
+            .filter((m): m is Member => !!m);
+          if (members.length > 0) this.membersSubject.next(members);
+        }),
+        tap(() => { this.reservationsLoaded = true; }),
+        // share the in-flight request so multiple callers don't trigger multiple HTTP calls
+        shareReplay(1)
+      );
+
+      // Ensure we clear the in-flight reference after first completion/error
+      this.reservationsLoadInFlight$.pipe(first()).subscribe({
+        next: () => { this.reservationsLoadInFlight$ = undefined; },
+        error: () => { this.reservationsLoadInFlight$ = undefined; }
+      });
+    }
+
+    return this.reservations$;
   }
 
   acceptReservationApi(id: string): Observable<Reservation> {
