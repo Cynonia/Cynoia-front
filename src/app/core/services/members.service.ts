@@ -83,7 +83,9 @@ export class MembersService {
     const createdAt = u?.createdAt ? new Date(u.createdAt) : new Date();
     const updatedAt = u?.updatedAt ? new Date(u.updatedAt) : undefined;
     const avatar = u?.avatar || undefined;
-    const roleRaw: string = (u?.role || '').toString().toLowerCase();
+    
+    // Extract role from u.role.code or u.role.name, fallback to u.role string
+    const roleRaw: string = (u?.role?.code || u?.role?.name || u?.role || '').toString().toLowerCase();
 
     // Preserve backend canonical roles with legacy fallbacks mapping
     const roleMap: Record<string, MemberRole> = {
