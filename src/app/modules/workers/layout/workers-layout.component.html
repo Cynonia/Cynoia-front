@@ -1,6 +1,25 @@
 <div class="min-h-screen bg-gray-50 flex">
+  <!-- Mobile menu button -->
+  <button (click)="toggleMobileSidebar()" 
+          class="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg text-gray-600 hover:text-gray-900">
+    <svg *ngIf="!showMobileSidebar" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </svg>
+    <svg *ngIf="showMobileSidebar" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    </svg>
+  </button>
+
+  <!-- Mobile overlay -->
+  <div *ngIf="showMobileSidebar" 
+       (click)="toggleMobileSidebar()"
+       class="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"></div>
+
   <!-- Sidebar -->
-  <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+  <div class="w-72 lg:w-80 bg-white border-r border-gray-200 flex flex-col fixed inset-y-0 left-0 transform transition-transform duration-300 z-40"
+       [class.translate-x-0]="showMobileSidebar"
+       [class.-translate-x-full]="!showMobileSidebar"
+       [class.lg:translate-x-0]="true">
     <!-- Logo et titre -->
     <div class="flex items-center gap-3 p-6 border-b border-gray-100">
       <div class="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
@@ -18,63 +37,68 @@
     <nav class="flex-1 px-4 py-6 space-y-1">
       <a 
         routerLink="/workers/espaces-disponibles"
+        (click)="closeMobileMenu()"
         routerLinkActive="bg-purple-600 text-white"
         [routerLinkActiveOptions]="{exact: false}"
-        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group">
+        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group text-sm sm:text-base">
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v0z"/>
         </svg>
-        <span class="font-medium">Espaces disponibles</span>
+        <span class="font-medium truncate">Espaces disponibles</span>
       </a>
 
       <a 
         routerLink="/workers/mes-reservations"
+        (click)="closeMobileMenu()"
         routerLinkActive="bg-purple-600 text-white"
         [routerLinkActiveOptions]="{exact: false}"
-        class="flex items-center justify-between text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group">
-        <div class="flex items-center gap-4">
+        class="flex items-center justify-between text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group text-sm sm:text-base">
+        <div class="flex items-center gap-4 flex-1 min-w-0">
           <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
           </svg>
-          <span class="font-medium">Mes réservations</span>
+          <span class="font-medium truncate">Mes réservations</span>
         </div>
         <span *ngIf="reservationsCount > 0" 
-              class="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              class="w-6 h-6 bg-purple-600 text-white text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0 ml-2">
           {{ reservationsCount }}
         </span>
       </a>
 
       <a 
         routerLink="/workers/messages"
+        (click)="closeMobileMenu()"
         routerLinkActive="bg-purple-600 text-white"
         [routerLinkActiveOptions]="{exact: false}"
-        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group">
+        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group text-sm sm:text-base">
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
         </svg>
-        <span class="font-medium">Messages</span>
+        <span class="font-medium truncate">Messages</span>
       </a>
 
       <a 
         routerLink="/workers/historique-paiements"
+        (click)="closeMobileMenu()"
         routerLinkActive="bg-purple-600 text-white"
         [routerLinkActiveOptions]="{exact: false}"
-        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group">
+        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group text-sm sm:text-base">
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
         </svg>
-        <span class="font-medium">Historique des paiements</span>
+        <span class="font-medium truncate">Historique des paiements</span>
       </a>
 
       <a 
         routerLink="/workers/historique-reservations"
+        (click)="closeMobileMenu()"
         routerLinkActive="bg-purple-600 text-white"
         [routerLinkActiveOptions]="{exact: false}"
-        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group">
+        class="flex items-center gap-4 text-gray-700 px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-50 group text-sm sm:text-base">
         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span class="font-medium">Historique des réservations</span>
+        <span class="font-medium truncate">Historique des réservations</span>
       </a>
     </nav>
 
@@ -108,22 +132,22 @@
   </div>
 
   <!-- Contenu principal -->
-  <div class="flex-1">
-    <header class="bg-white border-b border-gray-200 px-6 py-4">
+  <div class="flex-1 lg:ml-72 xl:ml-80">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold text-gray-900">{{ pageTitle }}</h1>
+        <h1 class="text-lg sm:text-xl font-semibold text-gray-900 ml-12 lg:ml-0">{{ pageTitle }}</h1>
 
         <ng-container *ngIf="currentUser$ | async as user">
           <button
         (click)="logout()"
-          class="flex items-center gap-2 text-gray-600 hover:text-gray-800"
+          class="flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm"
         >
           <img
             src="/assets/images/Webinar-pana.png"
             alt=""
-            class="w-8 h-8 rounded-full"
+            class="w-8 h-8 rounded-full hidden sm:block"
           />
-          <span>Déconnexion</span>
+          <span class="hidden md:inline">Déconnexion</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="h-4 w-4"
@@ -142,7 +166,7 @@
       </div>
     </header>
 
-    <main class="p-6">
+    <main class="p-4 sm:p-6">
       <router-outlet></router-outlet>
     </main>
   </div>

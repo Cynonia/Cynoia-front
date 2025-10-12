@@ -11,80 +11,84 @@ import { AuthHeaderComponent } from '../../../../shared/components/ui/header/hea
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule, AuthHeaderComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-6 lg:px-8">
-      <div class="flex items-start w-full">
+    <div class="min-h-screen bg-gray-50 flex flex-col items-center px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex items-start w-full max-w-4xl">
         <auth-header class="flex-1" />
       </div>
 
-      <main class="h-full flex-1 flex flex-col items-center justify-center w-full max-w-xl">
-        <div class="w-full bg-white p-8 rounded-lg shadow-lg animate-fade-in">
+      <main class="h-full flex-1 flex flex-col items-center justify-center w-full max-w-2xl">
+        <div class="w-full bg-white p-6 sm:p-8 rounded-lg shadow-lg animate-fade-in">
           <div class="text-center">
-            <h1 class="text-3xl font-semibold text-slate-800">Créer un compte client</h1>
-            <p class="mt-2 text-gray-600">Renseignez vos informations pour rejoindre l'entité.</p>
+            <h1 class="text-2xl sm:text-3xl font-semibold text-slate-800">Créer un compte client</h1>
+            <p class="mt-2 text-sm sm:text-base text-gray-600">Renseignez vos informations pour rejoindre l'entité.</p>
           </div>
 
           <!-- Invitation context (prefilled via URL) -->
           <div class="mt-4">
             <ng-container *ngIf="hasInvite; else noInviteTpl">
-              <div class="px-3 py-2 rounded-md bg-purple-50 text-purple-700 text-sm">
+              <div class="px-3 py-2 rounded-md bg-purple-50 text-purple-700 text-xs sm:text-sm">
                 Lien d'invitation détecté. Vous allez rejoindre l'entité n°{{ form.value.entityId }}.
               </div>
             </ng-container>
             <ng-template #noInviteTpl>
-              <div class="px-3 py-2 rounded-md bg-amber-50 text-amber-700 text-sm">
+              <div class="px-3 py-2 rounded-md bg-amber-50 text-amber-700 text-xs sm:text-sm">
                 Lien d'invitation manquant ou invalide. Veuillez ouvrir ce formulaire depuis votre lien d'invitation.
               </div>
             </ng-template>
           </div>
 
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-8 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form [formGroup]="form" (ngSubmit)="onSubmit()" class="mt-6 sm:mt-8 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Prénom</label>
-                <input type="text" formControlName="firstName" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="John" />
+                <input type="text" formControlName="firstName" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="John" />
                 <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.controls.firstName.invalid">Prénom requis</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Nom</label>
-                <input type="text" formControlName="lastName" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="Doe" />
+                <input type="text" formControlName="lastName" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="Doe" />
                 <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.controls.lastName.invalid">Nom requis</p>
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700">Identifiant</label>
-              <input type="text" formControlName="login" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="jdoe" />
+              <input type="text" formControlName="login" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="jdoe" />
               <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.controls.login.invalid">Identifiant requis</p>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700">Email</label>
-              <input type="email" formControlName="email" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="john@exemple.com" />
+              <input type="email" formControlName="email" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="john@exemple.com" />
               <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.controls.email.invalid">Email valide requis</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700">Mot de passe</label>
-                <input type="password" formControlName="password" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="••••••••" />
+                <input type="password" formControlName="password" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="••••••••" />
                 <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.controls.password.invalid">6 caractères minimum</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700">Confirmer le mot de passe</label>
-                <input type="password" formControlName="confirm" class="mt-1 w-full rounded-md border-gray-300 focus:border-purple-500 focus:ring-purple-500" placeholder="••••••••" />
+                <input type="password" formControlName="confirm" class="mt-1 w-full px-3 py-2 rounded-md border border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm sm:text-base" placeholder="••••••••" />
                 <p class="text-xs text-red-600 mt-1" *ngIf="submitted && form.errors?.['passwordMismatch']">Les mots de passe ne correspondent pas</p>
               </div>
             </div>
 
             <!-- entityId et token sont préremplis via l'URL et non affichés dans le formulaire -->
 
-            <button type="submit" [disabled]="loading || !hasInvite" class="w-full inline-flex justify-center items-center rounded-md bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:opacity-60">
+            <button type="submit" [disabled]="loading || !hasInvite" class="w-full inline-flex justify-center items-center rounded-md bg-purple-600 px-4 py-2.5 sm:py-3 text-sm sm:text-base text-white hover:bg-purple-700 disabled:opacity-60 font-medium">
               <svg *ngIf="loading" class="mr-2 h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
               </svg>
               Créer mon compte client
             </button>
+
+            <div class="text-center text-xs sm:text-sm text-gray-600">
+              <a routerLink="/auth/login" class="text-purple-600 hover:text-purple-500">Se connecter</a>
+            </div>
           </form>
         </div>
       </main>
