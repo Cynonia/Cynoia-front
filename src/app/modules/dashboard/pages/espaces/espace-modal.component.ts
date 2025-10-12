@@ -4,12 +4,11 @@ import { EspaceService } from '../../../../core/services/espace.service';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services';
 import { firstValueFrom } from 'rxjs';
-import { QuillModule } from 'ngx-quill';
 
 @Component({
   standalone: true,
   selector: 'app-espace-modal',
-  imports: [ReactiveFormsModule, CommonModule, QuillModule],
+  imports: [ReactiveFormsModule, CommonModule],
   template: `
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden">
       <!-- Header avec gradient -->
@@ -41,15 +40,7 @@ import { QuillModule } from 'ngx-quill';
           
           <!-- Section Informations de base -->
           <div class="mb-8">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                <svg class="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
-                </svg>
-              </div>
-              Informations de base
-            </h3>
+            
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Nom -->
@@ -144,19 +135,17 @@ import { QuillModule } from 'ngx-quill';
                 />
               </div>
 
-              <!-- Description avec WYSIWYG -->
+              <!-- Description -->
               <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Description
                 </label>
-                <div class="border border-gray-300 rounded-lg">
-                  <quill-editor
-                    formControlName="description"
-                    [modules]="quillModules"
-                    placeholder="Decrivez votre espace : equipements disponibles, ambiance, points forts..."
-                    [styles]="{'min-height': '150px', 'background': 'white'}"
-                  ></quill-editor>
-                </div>
+                <textarea
+                  formControlName="description"
+                  rows="6"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                  placeholder="Decrivez votre espace : ambiance, points forts..."
+                ></textarea>
               </div>
 
               <!-- Status -->
@@ -246,10 +235,8 @@ import { QuillModule } from 'ngx-quill';
       </div>
 
       <!-- Footer amélioré -->
-      <div class="flex items-center justify-between gap-4 p-6 border-t bg-gray-50/50">
-        <div class="text-sm text-gray-500">
-          <span class="font-medium">{{ editingSpace ? 'Modification' : 'Creation' }}</span> d&apos;un espace
-        </div>
+      <div class="flex items-center justify-end gap-4 p-1 border-t bg-gray-50/50">
+        
         <div class="flex items-center gap-3">
           <button
             type="button"
@@ -259,7 +246,7 @@ import { QuillModule } from 'ngx-quill';
             Annuler
           </button>
           <button
-            type="submit"
+            type="button"
             (click)="saveSpace()"
             [disabled]="spaceForm.invalid || isLoading"
             class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
@@ -268,14 +255,14 @@ import { QuillModule } from 'ngx-quill';
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              {{ editingSpace ? 'Mettre a jour' : 'Créer l&apos;espace' }}
+              {{ editingSpace ? 'Mettre à jour' : "Créer l'espace" }}
             </span>
             <span *ngIf="isLoading" class="flex items-center gap-2">
               <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              {{ editingSpace ? 'Mise a jour...' : 'Creation...' }}
+              {{ editingSpace ? 'Mise à jour...' : 'Création...' }}
             </span>
           </button>
         </div>
@@ -294,24 +281,6 @@ export class EspaceFormComponent implements OnInit {
   spaceForm!: FormGroup;
   imagePreviews: string[] = [];
   isLoading = false;
-
-  // Configuration de l'\''éditeur Quill
-  quillModules = {
-    toolbar: [
-      ['bold', 'italic', 'underline', 'strike'],
-      ['blockquote', 'code-block'],
-      [{ 'header': 1 }, { 'header': 2 }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'align': [] }],
-      ['clean'],
-      ['link']
-    ]
-  };
 
   constructor(private fb: FormBuilder, private authService: AuthService) {}
 
