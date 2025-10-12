@@ -4,6 +4,7 @@ import { EspaceService } from '../../../../core/services/espace.service';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../../core/services';
 import { firstValueFrom } from 'rxjs';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   standalone: true,
@@ -36,7 +37,7 @@ import { firstValueFrom } from 'rxjs';
 
       <!-- Form Content avec scroll amélioré -->
       <div class="p-8 overflow-y-auto max-h-[calc(95vh-180px)] scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100">
-        <form [formGroup]="spaceForm" (ngSubmit)="saveSpace()">
+        <form *ngIf="spaceForm" [formGroup]="spaceForm" (ngSubmit)="saveSpace()">
           
           <!-- Section Informations de base -->
           <div class="mb-8">
@@ -72,7 +73,6 @@ import { firstValueFrom } from 'rxjs';
                   <option value="">Selectionner un type</option>
                   <option value="1">Salle de reunion</option>
                   <option value="2">Bureau</option>
-                  <option value="3">Equipement</option>
                 </select>
                 <div *ngIf="spaceForm.get('typeEspacesId')?.invalid && spaceForm.get('typeEspacesId')?.touched" 
                      class="text-red-500 text-sm mt-1">
@@ -232,6 +232,11 @@ import { firstValueFrom } from 'rxjs';
             </div>
           </div>
         </form>
+
+        <!-- Loading state si le form n'est pas encore prêt -->
+        <div *ngIf="!spaceForm" class="flex items-center justify-center py-12">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
       </div>
 
       <!-- Footer amélioré -->
@@ -248,7 +253,7 @@ import { firstValueFrom } from 'rxjs';
           <button
             type="button"
             (click)="saveSpace()"
-            [disabled]="spaceForm.invalid || isLoading"
+            [disabled]="!spaceForm || spaceForm.invalid || isLoading"
             class="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
           >
             <span *ngIf="!isLoading" class="flex items-center gap-2">
@@ -278,14 +283,15 @@ export class EspaceFormComponent implements OnInit {
   currentUser$ = this.authService.currentUser$;
 
   espaceService = inject(EspaceService);
+  toastService = inject(ToastService);
   spaceForm!: FormGroup;
   imagePreviews: string[] = [];
   isLoading = false;
 
   constructor(private fb: FormBuilder, private authService: AuthService) {}
 
-  ngOnInit(): void {
-    this.initForm();
+  async ngOnInit(): Promise<void> {
+    await this.initForm();
 
     if (this.editingSpace) {
       this.spaceForm.patchValue(this.editingSpace);
@@ -318,28 +324,44 @@ export class EspaceFormComponent implements OnInit {
   }
 
   async saveSpace(): Promise<void> {
-    if (this.spaceForm.valid) {
-      this.isLoading = true;
-      try {
-        const formData = { ...this.spaceForm.value };
-        console.log('Données du formulaire:', formData);
-        
-        // Ici vous pouvez appeler votre service selon les méthodes disponibles
-        // if (this.editingSpace) {
-        //   this.spaceUpdated.emit(formData);
-        // } else {
-        //   this.spaceCreated.emit(formData);
-        // }
+    if (!this.spaceForm) {
+      console.log('Formulaire non initialisé');
+      return;
+    }
 
-        this.closeModal();
-      } catch (error) {
-        console.error('Erreur lors de la sauvegarde:', error);
-      } finally {
-        this.isLoading = false;
-      }
-    } else {
-      console.log('Formulaire invalide');
+    if (!this.spaceForm.valid) {
+      console.log('Formulaire invalide', this.spaceForm.errors);
       this.markFormGroupTouched(this.spaceForm);
+      return;
+    }
+
+    this.isLoading = true;
+    try {
+      const formData = { ...this.spaceForm.value };
+      console.log('Données du formulaire:', formData);
+      formData.typeEspacesId = parseInt(formData.typeEspacesId);
+
+      // Call backend via EspaceService
+      if (this.editingSpace && this.editingSpace.id) {
+        // Update existing espace
+        const resp = await firstValueFrom(this.espaceService.update(this.editingSpace.id, formData));
+        // Emit updated espace data if available
+        this.spaceUpdated.emit(resp?.data ?? formData);
+        this.toastService.success('Espace mis à jour avec succès');
+      } else {
+        // Create new espace
+        const resp = await firstValueFrom(this.espaceService.create(formData));
+        // Emit created espace data if available
+        this.spaceCreated.emit(resp?.data ?? formData);
+        this.toastService.success('Espace créé avec succès');
+      }
+
+      this.closeModal();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde vers le backend:', error);
+      this.toastService.error('Erreur lors de la sauvegarde de l\'espace');
+    } finally {
+      this.isLoading = false;
     }
   }
 
