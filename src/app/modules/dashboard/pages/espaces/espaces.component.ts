@@ -65,12 +65,12 @@ interface UiSpace {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, EspaceFormComponent],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div class="flex justify-between items-start">
-        <div>
-          <div class="flex items-center gap-3 mb-2">
-            <button class="p-2 hover:bg-gray-100 rounded-lg" type="button">
+      <div class="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 sm:gap-3 mb-2">
+            <button class="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0" type="button">
               <svg
                 class="w-5 h-5 text-gray-600"
                 fill="none"
@@ -85,19 +85,19 @@ interface UiSpace {
                 />
               </svg>
             </button>
-            <h1 class="text-2xl font-bold text-gray-900">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
               Gestion des espaces
             </h1>
           </div>
-          <p class="text-gray-600">Gérez vos bureaux, salles et équipements</p>
+          <p class="text-xs sm:text-sm text-gray-600 truncate">Gérez vos bureaux, salles et équipements</p>
         </div>
         <button
           (click)="openAddSpaceModal()"
-          class="flex items-center gap-2 btn-primary px-4 py-2 rounded-lg hover:brightness-90 transition-colors"
+          class="w-full sm:w-auto flex items-center justify-center gap-2 btn-primary px-3 sm:px-4 py-2 rounded-lg hover:brightness-90 transition-colors text-sm whitespace-nowrap flex-shrink-0"
           type="button"
         >
           <svg
-            class="w-5 h-5"
+            class="w-4 h-4 sm:w-5 sm:h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -114,10 +114,10 @@ interface UiSpace {
       </div>
 
       <!-- Filtres -->
-      <div class="flex items-center gap-4 flex-wrap">
-        <div class="flex items-center gap-2">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 flex-shrink-0">
           <svg
-            class="w-5 h-5 text-gray-500"
+            class="w-4 h-4 sm:w-5 sm:h-5 text-gray-500"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -129,13 +129,14 @@ interface UiSpace {
               d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
             />
           </svg>
-          <span class="text-gray-700 font-medium">Filtrer par type :</span>
+          <span class="text-xs sm:text-sm text-gray-700 font-medium whitespace-nowrap">Filtrer par type :</span>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-wrap w-full sm:w-auto">
           <button
             *ngFor="let filter of filterOptions"
             (click)="setActiveFilter(filter.value)"
             [ngClass]="getFilterButtonClass(filter.value)"
+            class="text-xs sm:text-sm"
             type="button"
           >
             {{ filter.label }}
@@ -235,13 +236,13 @@ interface UiSpace {
       <!-- Grille des espaces -->
       <div
         *ngIf="filteredSpaces.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"
       >
         <div
           *ngFor="let space of filteredSpaces"
-          class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow h-full"
+          class="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col"
         >
-          <div class="h-32 bg-gray-200 relative overflow-hidden">
+          <div class="h-28 sm:h-32 bg-gray-200 relative overflow-hidden flex-shrink-0">
             <img
               *ngIf="space.image"
               [src]="space.image"
@@ -253,7 +254,7 @@ interface UiSpace {
               class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200"
             >
               <svg
-                class="w-16 h-16 text-gray-400"
+                class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -273,7 +274,7 @@ interface UiSpace {
                 type="button"
               >
                 <svg
-                  class="w-4 h-4 text-gray-600"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -292,7 +293,7 @@ interface UiSpace {
                 type="button"
               >
                 <svg
-                  class="w-4 h-4 text-red-600"
+                  class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -308,31 +309,31 @@ interface UiSpace {
             </div>
           </div>
 
-          <div class="p-3">
-            <div class="flex items-center justify-between mb-2">
+          <div class="p-2.5 sm:p-3 flex flex-col flex-1">
+            <div class="flex items-center justify-between mb-2 gap-2">
               <span
                 [ngClass]="getTypeBadgeClass(space.type)"
-                class="px-2 py-0.5 text-[10px] font-medium rounded-full"
+                class="px-2 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0"
               >
                 {{ getTypeLabel(space.type) }}
               </span>
               <span
                 [ngClass]="getStatusBadgeClass(space.status)"
-                class="px-2 py-0.5 text-[10px] font-medium rounded-full"
+                class="px-2 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0"
               >
                 {{ getStatusLabel(space.status) }}
               </span>
             </div>
 
-            <h3 class="text-base font-semibold text-gray-900 mb-1 truncate">{{ space.name }}</h3>
-            <p class="text-xs text-gray-600 mb-2 line-clamp-2">
+            <h3 class="text-sm sm:text-base font-semibold text-gray-900 mb-1 truncate">{{ space.name }}</h3>
+            <p class="text-xs text-gray-600 mb-2 line-clamp-2 flex-1">
               {{ space.description }}
             </p>
 
-            <div class="grid grid-cols-2 gap-x-3 gap-y-2 mb-3">
-              <div class="flex items-center text-xs text-gray-600">
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 sm:gap-x-3 sm:gap-y-2 mb-2 sm:mb-3">
+              <div class="flex items-center text-[10px] sm:text-xs text-gray-600">
                 <svg
-                  class="w-4 h-4 mr-1.5"
+                  class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -344,15 +345,15 @@ interface UiSpace {
                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                   />
                 </svg>
-                {{ space.capacity }} personne{{ space.capacity > 1 ? 's' : '' }}
+                <span class="truncate">{{ space.capacity }} pers.</span>
               </div>
 
               <div
                 *ngIf="space.surface"
-                class="flex items-center text-xs text-gray-600"
+                class="flex items-center text-[10px] sm:text-xs text-gray-600"
               >
                 <svg
-                  class="w-4 h-4 mr-1.5"
+                  class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -364,15 +365,15 @@ interface UiSpace {
                     d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
                   />
                 </svg>
-                {{ space.surface }} m²
+                <span class="truncate">{{ space.surface }} m²</span>
               </div>
 
               <div
                 *ngIf="space.location"
-                class="flex items-center text-xs text-gray-600"
+                class="flex items-center text-[10px] sm:text-xs text-gray-600 col-span-2"
               >
                 <svg
-                  class="w-4 h-4 mr-1.5"
+                  class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -390,12 +391,12 @@ interface UiSpace {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                {{ space.location }}
+                <span class="truncate">{{ space.location }}</span>
               </div>
 
-              <div class="flex items-center text-xs text-gray-600">
+              <div class="flex items-center text-[10px] sm:text-xs text-gray-600 col-span-2">
                 <svg
-                  class="w-4 h-4 mr-1.5"
+                  class="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

@@ -9,117 +9,123 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
   standalone: true,
   imports: [CommonModule, InteractiveChartComponent],
   template: `
-    <div class="p-6 space-y-6">
+    <div class="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Analyse financière</h1>
-            <p class="text-gray-600">Suivi des revenus, paiements et performance financière</p>
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+        <div class="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+          <button class="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0 sm:hidden" onclick="history.back()">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div class="min-w-0 flex-1">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Analyse financière</h1>
+            <p class="text-xs sm:text-sm text-gray-600 truncate">Suivi des revenus, paiements et performance financière</p>
           </div>
         </div>
-        <div class="flex items-center space-x-3">
-          <button class="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <button class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-xs sm:text-sm whitespace-nowrap">
+            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <span>Exporter</span>
+            <span class="hidden sm:inline">Exporter</span>
+            <span class="sm:hidden">Export</span>
           </button>
-          <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-            <option>12 derniers mois</option>
-            <option>6 derniers mois</option>
-            <option>3 derniers mois</option>
+          <select class="px-2 sm:px-3 lg:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-xs sm:text-sm">
+            <option>12 mois</option>
+            <option>6 mois</option>
+            <option>3 mois</option>
             <option>Cette année</option>
           </select>
         </div>
       </div>
 
       <!-- KPI Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <!-- Revenus totaux -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-          <div class="flex items-center space-x-3">
-            <div class="p-2 bg-green-100 rounded-lg">
-              <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="p-1.5 sm:p-2 bg-green-100 rounded-lg flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"/>
               </svg>
             </div>
-            <div class="flex-1">
-              <h3 class="text-2xl font-bold text-gray-900">{{ formatCurrency(kpiData.totalRevenue) }}</h3>
-              <p class="text-sm text-gray-600">Revenus totaux</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{{ formatCurrency(kpiData.totalRevenue) }}</h3>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Revenus totaux</p>
             </div>
           </div>
         </div>
 
         <!-- Ce mois -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-          <div class="flex items-center space-x-3">
-            <div class="p-2 bg-blue-100 rounded-lg">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="p-1.5 sm:p-2 bg-blue-100 rounded-lg flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
               </svg>
             </div>
-            <div class="flex-1">
-              <h3 class="text-2xl font-bold text-gray-900">{{ formatCurrency(kpiData.thisMonth) }}</h3>
-              <p class="text-sm text-gray-600">Ce mois</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{{ formatCurrency(kpiData.thisMonth) }}</h3>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Ce mois</p>
             </div>
           </div>
         </div>
 
         <!-- En attente -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-          <div class="flex items-center space-x-3">
-            <div class="p-2 bg-yellow-100 rounded-lg">
-              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="p-1.5 sm:p-2 bg-yellow-100 rounded-lg flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
             </div>
-            <div class="flex-1">
-              <h3 class="text-2xl font-bold text-gray-900">{{ formatCurrency(kpiData.pending) }}</h3>
-              <p class="text-sm text-gray-600">En attente</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{{ formatCurrency(kpiData.pending) }}</h3>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">En attente</p>
             </div>
           </div>
         </div>
 
         <!-- En retard -->
-        <div class="bg-white rounded-lg border border-gray-200 p-6">
-          <div class="flex items-center space-x-3">
-            <div class="p-2 bg-red-100 rounded-lg">
-              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="p-1.5 sm:p-2 bg-red-100 rounded-lg flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.348 16.5c-.77.833.192 2.5 1.732 2.5z"/>
               </svg>
             </div>
-            <div class="flex-1">
-              <h3 class="text-2xl font-bold text-gray-900">{{ formatCurrency(kpiData.overdue) }}</h3>
-              <p class="text-sm text-gray-600">En retard</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{{ formatCurrency(kpiData.overdue) }}</h3>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">En retard</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="bg-white rounded-lg border border-gray-200">
-        <div class="border-b border-gray-200">
-          <nav class="flex space-x-8 px-6" aria-label="Tabs">
+      <div class="bg-white rounded-lg border border-gray-200 overflow-visible">
+        <div class="border-b border-gray-200 overflow-x-auto -mb-px">
+          <nav class="flex gap-4 sm:gap-6 lg:gap-8 px-3 sm:px-4 lg:px-6 min-w-min" aria-label="Tabs">
             <button
               *ngFor="let tab of tabs"
               (click)="activeTab = tab.id"
               [class]="getTabClass(tab.id)"
-              class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap">
+              class="py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
               {{ tab.label }}
             </button>
           </nav>
         </div>
 
         <!-- Tab Content -->
-        <div class="p-6">
+        <div class="p-3 sm:p-4 lg:p-6">
           <!-- Vue d'ensemble -->
           <div *ngIf="activeTab === 'overview'">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <!-- Évolution des revenus -->
               <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Évolution des revenus</h3>
-                <div class="h-64">
+                <h3 class="text-sm sm:text-base lg:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Évolution des revenus</h3>
+                <div class="h-48 sm:h-56 lg:h-64">
                   <app-interactive-chart 
                     [data]="monthlyRevenueData"
                     [type]="'line'"
@@ -132,8 +138,8 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
 
               <!-- Répartition des paiements -->
               <div>
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des paiements</h3>
-                <div class="h-64">
+                <h3 class="text-sm sm:text-base lg:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Répartition des paiements</h3>
+                <div class="h-48 sm:h-56 lg:h-64">
                   <app-interactive-chart 
                     [data]="paymentStatusData"
                     [type]="'doughnut'"
@@ -149,18 +155,18 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
 
           <!-- Paiements -->
           <div *ngIf="activeTab === 'payments'">
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
               <!-- Recherche et filtres -->
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                  <div class="relative">
-                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 lg:gap-4 flex-1">
+                  <div class="relative flex-1 sm:max-w-xs">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                    <input type="text" placeholder="Rechercher un paiement..." 
-                           class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <input type="text" placeholder="Rechercher..." 
+                           class="w-full pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                   </div>
-                  <select class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                  <select class="px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                     <option>Tous les statuts</option>
                     <option>Payé</option>
                     <option>En attente</option>
@@ -169,9 +175,10 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
                 </div>
                 <button 
                   (click)="navigateToPayments()"
-                  class="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                  <span>Voir tous les paiements</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs sm:text-sm whitespace-nowrap flex-shrink-0">
+                  <span class="hidden sm:inline">Voir tous les paiements</span>
+                  <span class="sm:hidden">Tous les paiements</span>
+                  <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
                 </button>
@@ -179,68 +186,68 @@ import { InteractiveChartComponent } from '../../../../shared/components/charts/
 
               <!-- Table des paiements -->
               <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                  <h3 class="text-sm font-medium text-gray-900">Historique des paiements ({{ payments.length }})</h3>
+                <div class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 bg-gray-50 border-b border-gray-200">
+                  <h3 class="text-xs sm:text-sm font-medium text-gray-900">Historique des paiements ({{ payments.length }})</h3>
                 </div>
                 <div class="overflow-x-auto">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                       <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membre</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Espace</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Méthode</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date d'échéance</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de paiement</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Membre</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Espace</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Montant</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Statut</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Méthode</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date d'échéance</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date de paiement</th>
+                        <th class="px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                       <tr *ngFor="let payment of payments" class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <div>
-                            <div class="text-sm font-medium text-gray-900">{{ payment.memberName }}</div>
-                            <div class="text-sm text-gray-500">{{ payment.memberLocation }}</div>
+                            <div class="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[120px] sm:max-w-none">{{ payment.memberName }}</div>
+                            <div class="text-[10px] sm:text-xs text-gray-500 truncate max-w-[120px] sm:max-w-none">{{ payment.memberLocation }}</div>
                           </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {{ payment.spaceName }}
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900">
+                          <div class="max-w-[100px] sm:max-w-[150px] truncate">{{ payment.spaceName }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                           {{ formatCurrency(payment.amount) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
                           <span [class]="getStatusClass(payment.status)" 
-                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full">
+                                class="inline-flex px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full">
                             {{ getStatusLabel(payment.status) }}
                           </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                          <div class="flex items-center space-x-2">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div class="flex items-center gap-1.5 sm:gap-2">
                             <div [class]="getMethodIcon(payment.method)">
-                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4z"/>
                               </svg>
                             </div>
-                            <span class="text-sm text-gray-900">{{ payment.method }}</span>
+                            <span class="text-xs sm:text-sm text-gray-900 hidden sm:inline">{{ payment.method }}</span>
                           </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {{ formatDate(payment.dueDate) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {{ payment.paidDate ? formatDate(payment.paidDate) : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div class="flex items-center space-x-2">
-                            <button class="text-purple-600 hover:text-purple-800">
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <td class="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          <div class="flex items-center gap-1.5 sm:gap-2">
+                            <button class="text-purple-600 hover:text-purple-800 p-1">
+                              <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                               </svg>
                             </button>
-                            <button class="text-red-600 hover:text-red-800">
+                            <button class="text-red-600 hover:text-red-800 p-1">
                               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                               </svg>

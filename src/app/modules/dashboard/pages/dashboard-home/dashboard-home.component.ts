@@ -42,11 +42,11 @@ import { takeUntil } from 'rxjs/operators';
     </div>
 
     <!-- Dashboard content -->
-    <div *ngIf="!isLoading" class="space-y-6">
+    <div *ngIf="!isLoading" class="space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p class="text-gray-600">Vue d'ensemble de votre espace de coworking</p>
+      <div class="hidden">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p class="text-sm sm:text-base text-gray-600">Vue d'ensemble de votre espace de coworking</p>
       </div>
 
       <!-- Stats Cards -->
@@ -73,15 +73,15 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
+            <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+              <h3 class="text-xs sm:text-sm font-medium text-gray-700 truncate">
                 Réservations en attente
               </h3>
-              <div class="flex items-baseline">
-                <p class="text-xl sm:text-2xl font-bold text-gray-900">
+              <div class="flex items-baseline gap-1 sm:gap-2">
+                <p class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                   {{ stats.enAttente }}
                 </p>
-                <p class="text-xs text-gray-500 ml-2">À valider</p>
+                <p class="text-xs text-gray-500">À valider</p>
               </div>
             </div>
           </div>
@@ -109,12 +109,12 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
+            <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+              <h3 class="text-xs sm:text-sm font-medium text-gray-700 truncate">
                 Réservations confirmées
               </h3>
-              <div class="flex items-baseline">
-                <p class="text-xl sm:text-2xl font-bold text-gray-900">
+              <div class="flex items-baseline gap-1 sm:gap-2">
+                <p class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                   {{ stats.confirmees }}
                 </p>
               </div>
@@ -143,12 +143,12 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
+            <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+              <h3 class="text-xs sm:text-sm font-medium text-gray-700 truncate">
                 Réservations annulées
               </h3>
-              <div class="flex items-baseline">
-                <p class="text-xl sm:text-2xl font-bold text-gray-900">
+              <div class="flex items-baseline gap-1 sm:gap-2">
+                <p class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                   {{ stats.annulees }}
                 </p>
               </div>
@@ -178,15 +178,15 @@ import { takeUntil } from 'rxjs/operators';
                 </svg>
               </div>
             </div>
-            <div class="ml-3 sm:ml-4 min-w-0">
-              <h3 class="text-sm sm:text-base font-medium text-gray-700 truncate">
+            <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+              <h3 class="text-xs sm:text-sm font-medium text-gray-700 truncate">
                 Espaces disponibles
               </h3>
-              <div class="flex items-baseline">
-                <p class="text-xl sm:text-2xl font-bold text-gray-900">
+              <div class="flex items-baseline gap-1 sm:gap-2">
+                <p class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                   {{ availableSpacesCount }}
                 </p>
-                <p class="text-xs text-gray-500 ml-2">Espaces actifs</p>
+                <p class="text-xs text-gray-500">Espaces actifs</p>
               </div>
             </div>
           </div>
@@ -196,65 +196,56 @@ import { takeUntil } from 'rxjs/operators';
       <!-- Réservations récentes -->
       <div class="bg-white rounded-lg border border-gray-200">
         <div
-          class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
-        >
-          <h3 class="text-lg font-semibold text-gray-900">
+          class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">
             Réservations récentes
           </h3>
           <a
             routerLink="/dashboard/reservations"
-            class="text-sm text-purple-600 hover:text-purple-700 font-medium"
-          >
+            class="text-xs sm:text-sm text-purple-600 hover:text-purple-700 font-medium">
             Voir tout
           </a>
         </div>
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
           <div *ngIf="recentReservations.length === 0" class="text-center py-8">
             <svg
               class="w-12 h-12 text-gray-400 mx-auto mb-4"
               fill="none"
               stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+              viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            <p class="text-gray-600">Aucune réservation récente</p>
+            <p class="text-sm sm:text-base text-gray-600">Aucune réservation récente</p>
           </div>
 
-          <div *ngIf="recentReservations.length > 0" class="space-y-4">
+          <div *ngIf="recentReservations.length > 0" class="space-y-3 sm:space-y-4">
             <div
               *ngFor="let reservation of recentReservations"
-              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-900">
+              class="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3">
+              <div class="flex-1 min-w-0">
+                <h4 class="font-medium text-sm sm:text-base text-gray-900 truncate">
                   {{ reservation.espace.name }}
                 </h4>
-                <div class="flex items-center text-sm text-gray-500 mt-1">
-                  <span>{{
+                <div class="flex flex-wrap items-center text-xs sm:text-sm text-gray-500 mt-1 gap-1">
+                  <span class="truncate">{{
                     reservation.user?.firstName +
                       ' ' +
                       reservation.user?.lastName || 'Membre inconnu'
                   }}</span>
-                  <span class="mx-2">•</span>
-                  <span>{{ formatDate(reservation.startAt) }}</span>
-                  <span class="mx-2">•</span>
-                  <span
-                    >{{ formatTime(reservation.startAt) }} -
-                    {{ formatTime(reservation.endAt) }}</span
-                  >
+                  <span class="hidden sm:inline">•</span>
+                  <span class="whitespace-nowrap">{{ formatDate(reservation.startAt) }}</span>
+                  <span class="hidden sm:inline">•</span>
+                  <span class="whitespace-nowrap">{{ formatTime(reservation.startAt) }} - {{ formatTime(reservation.endAt) }}</span>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 sm:flex-shrink-0">
                 <span
                   [class]="getStatusBadgeClass(reservation.status)"
-                  class="px-3 py-1 text-xs font-medium rounded-full"
-                >
+                  class="px-2.5 sm:px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap">
                   {{ getStatusLabel(reservation.status) }}
                 </span>
               </div>

@@ -15,11 +15,20 @@ export class WorkersLayoutComponent {
   reservationsCount = 1; // À connecter avec un vrai service
   reservationsActives = 1;
   reservationsEnAttente = 1;
+  showMobileSidebar = false;
 
   currentUser$: Observable<any | null>;
 
   constructor(private authService: AuthService) {
     this.currentUser$ = this.authService.currentUser$;
+  }
+
+  toggleMobileSidebar(): void {
+    this.showMobileSidebar = !this.showMobileSidebar;
+  }
+
+  closeMobileMenu(): void {
+    this.showMobileSidebar = false;
   }
 
   logout(): void {

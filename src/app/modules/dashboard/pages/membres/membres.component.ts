@@ -11,107 +11,109 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="space-y-6">
+    <div class="space-y-4 sm:space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <button class="p-2 hover:bg-gray-100 rounded-lg">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button class="p-2 hover:bg-gray-100 rounded-lg flex-shrink-0">
             <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
           </button>
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Gestion des membres</h1>
-            <p class="text-gray-600">Invitez et gérez les membres de votre organisation</p>
+          <div class="min-w-0">
+            <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Gestion des membres</h1>
+            <p class="text-xs sm:text-sm text-gray-600 truncate">Invitez et gérez les membres de votre organisation</p>
           </div>
         </div>
         
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-shrink-0">
           <button 
             (click)="openInviteModal()"
-            class="inline-flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="inline-flex items-center gap-1.5 sm:gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm whitespace-nowrap">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
             </svg>
-            Inviter un membre
+            <span class="hidden sm:inline">Inviter un membre</span>
+            <span class="sm:hidden">Inviter</span>
           </button>
 
           <!-- Bouton de test -->
           <button 
             (click)="openInviteModalTest()"
-            class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="inline-flex items-center gap-1.5 sm:gap-2 bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm whitespace-nowrap">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
             </svg>
-            Test Invitation
+            <span class="hidden sm:inline">Test Invitation</span>
+            <span class="sm:hidden">Test</span>
           </button>
         </div>
       </div>
 
       <!-- Statistiques -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
             </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
-              <p class="text-sm text-gray-600">Total membres</p>
+            <div class="min-w-0">
+              <p class="text-lg sm:text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Total membres</p>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
               </svg>
             </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.admins }}</p>
-              <p class="text-sm text-gray-600">Administrateurs</p>
+            <div class="min-w-0">
+              <p class="text-lg sm:text-2xl font-bold text-gray-900">{{ stats.admins }}</p>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Administrateurs</p>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
               </svg>
             </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.managers }}</p>
-              <p class="text-sm text-gray-600">Gestionnaires</p>
+            <div class="min-w-0">
+              <p class="text-lg sm:text-2xl font-bold text-gray-900">{{ stats.managers }}</p>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Gestionnaires</p>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+        <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4">
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <div class="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
             </div>
-            <div>
-              <p class="text-2xl font-bold text-gray-900">{{ stats.actifs }}</p>
-              <p class="text-sm text-gray-600">Actifs</p>
+            <div class="min-w-0">
+              <p class="text-lg sm:text-2xl font-bold text-gray-900">{{ stats.actifs }}</p>
+              <p class="text-xs sm:text-sm text-gray-600 truncate">Actifs</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Barre de recherche et filtres -->
-      <div class="bg-white rounded-lg border border-gray-200 p-6">
-        <div class="flex flex-col md:flex-row gap-4 mb-6">
+      <div class="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
+        <div class="flex flex-col md:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
           <!-- Barre de recherche -->
           <div class="flex-1">
             <div class="relative">
-              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
               <input 
@@ -119,22 +121,22 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
                 [(ngModel)]="searchTerm"
                 (ngModelChange)="onSearchChange()"
                 placeholder="Rechercher un membre..."
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                class="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
             </div>
           </div>
         </div>
 
         <!-- Filtres par rôle -->
-        <div class="mb-6">
-          <p class="text-sm font-medium text-gray-700 mb-3">Filtrer par rôle :</p>
+        <div class="mb-4 sm:mb-6">
+          <p class="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">Filtrer par rôle :</p>
           <div class="flex flex-wrap gap-2">
             <button 
               *ngFor="let role of roleFilters"
               (click)="setRoleFilter(role.key)"
               [class]="getRoleFilterClass(role.key)"
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap">
               {{ role.label }}
-              <span *ngIf="role.count > 0" class="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded-full text-xs">
+              <span *ngIf="role.count > 0" class="ml-1.5 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-white bg-opacity-20 rounded-full text-xs">
                 {{ role.count }}
               </span>
             </button>
@@ -142,39 +144,40 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
         </div>
 
         <!-- Liste des membres -->
-        <div class="space-y-3">
+        <div class="space-y-2 sm:space-y-3">
           <div *ngFor="let member of filteredMembers" 
-               class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+               class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <!-- Info membre -->
-            <div class="flex items-center gap-4">
+            <div class="flex items-start sm:items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
               <!-- Avatar -->
               <div [class]="getAvatarClass(member)" 
-                   class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-white font-semibold">{{ getInitials(member.name) }}</span>
+                   class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0">
+                <span class="text-white text-xs sm:text-sm font-semibold">{{ getInitials(member.name) }}</span>
               </div>
               
               <!-- Détails -->
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-1">
-                  <h3 class="font-semibold text-gray-900">{{ member.name }}</h3>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="text-sm sm:text-base font-semibold text-gray-900 truncate">{{ member.name }}</h3>
                   <span *ngIf="member.status === 'en-attente'" 
-                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        class="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-yellow-100 text-yellow-800 whitespace-nowrap flex-shrink-0">
                     En attente
                   </span>
                 </div>
-                <p class="text-sm text-gray-500">{{ member.email }}</p>
-                <div class="flex items-center gap-4 text-xs text-gray-500 mt-1">
-                  <span>Rejoint le {{ formatJoinDate(member.joinedAt) }}</span>
-                  <span>Dernière activité : {{ formatLastActivity(member.lastActivity) }}</span>
+                <p class="text-xs sm:text-sm text-gray-500 truncate">{{ member.email }}</p>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 lg:gap-4 text-[10px] sm:text-xs text-gray-500 mt-1">
+                  <span class="truncate">Rejoint le {{ formatJoinDate(member.joinedAt) }}</span>
+                  <span class="hidden sm:inline">•</span>
+                  <span class="truncate">Activité : {{ formatLastActivity(member.lastActivity) }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-shrink-0">
               <!-- Badge de rôle -->
               <span [class]="getRoleBadgeClass(member.role)" 
-                    class="px-3 py-1 rounded-full text-sm font-medium">
+                    class="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
                 {{ getRoleLabel(member.role) }}
               </span>
 
@@ -182,8 +185,8 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
               <div class="relative">
                 <button 
                   (click)="toggleMemberMenu(member.id)"
-                  class="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 flex-shrink-0">
+                  <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
                   </svg>
                 </button>
