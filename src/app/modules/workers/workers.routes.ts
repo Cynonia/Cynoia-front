@@ -41,7 +41,7 @@ export const workersRoutes: Routes = [
       },
       {
         path: 'messages',
-        loadComponent: () => import('./pages/messages/messages.component').then(m => m.MessagesComponent)
+        loadComponent: () => import('../dashboard/pages/messages/messages.component').then(m => m.MessagesComponent)
       },
       {
         path: 'historique-reservations',

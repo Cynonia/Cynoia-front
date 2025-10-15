@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TransactionsService, Transaction } from '../../../../core/services/transactions.service';
 
 @Component({
   selector: 'app-historique-des-paiements',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIf, NgFor],
   template: `
     <div class="space-y-6">
       <!-- Header -->
@@ -209,84 +210,42 @@ export class HistoriqueDesPaiementsComponent implements OnInit {
   periodFilter = '';
 
   stats = {
-    totalPaye: 95000,
-    enAttente: 30000,
-    transactions: 5
+    totalPaye: 0,
+    enAttente: 0,
+    transactions: 0
   };
+  transactions: Array<{
+    id: number | string;
+    spaceName: string;
+    description: string;
+    reference: string;
+    transactionId: string;
+    paymentMethod: string;
+    date: string;
+    amount: number;
+    status: string;
+  }> = [];
 
-  transactions = [
-    {
-      id: 1,
-      spaceName: 'Bureau privé 101',
-      description: 'Location bureau privé • 3 jours',
-      reference: 'EM001',
-      transactionId: 'KD.TX200412130001',
-      paymentMethod: 'mobile-money',
-      date: '15 déc. 2024',
-      amount: 45000,
-      status: 'paye'
-    },
-    {
-      id: 2,
-      spaceName: 'Salle de réunion Alpha',
-      description: 'Réservation salle de réunion • 2h',
-      reference: 'EM002',
-      transactionId: 'KD.TX200412130001',
-      paymentMethod: 'carte-bancaire',
-      date: '20 déc. 2024',
-      amount: 50000,
-      status: 'paye'
-    },
-    {
-      id: 3,
-      spaceName: 'Bureau privé 101',
-      description: 'Location bureau privé • 2 jours',
-      reference: 'EM003',
-      transactionId: '',
-      paymentMethod: 'mobile-money',
-      date: 'Échéance 20 janv. 2025',
-      amount: 30000,
-      status: 'en-attente'
-    },
-    {
-      id: 4,
-      spaceName: 'Projecteur HD',
-      description: 'Location projecteur • 3 jours',
-      reference: 'EM004',
-      transactionId: '',
-      paymentMethod: 'mobile-money',
-      date: 'Échéance 30 déc. 2024',
-      amount: 15000,
-      status: 'echec'
-    },
-    {
-      id: 5,
-      spaceName: 'Salle de réunion Alpha',
-      description: 'Réservation annulée • Remboursement',
-      reference: 'EM005',
-      transactionId: 'KD.RT200412130001',
-      paymentMethod: 'virement',
-      date: '25 nov. 2024',
-      amount: 25000,
-      status: 'rembourse'
-    }
-  ];
-
-  constructor(private router: Router) {}
+  constructor(private router: Router, private transactionsService: TransactionsService) {}
 
   ngOnInit() {
-    this.calculateStats();
+    this.transactionsService.refreshFromApi();
+    this.transactionsService.transactions$.subscribe((items) => {
+      this.transactions = (items || []).map((t) => this.mapTransactionToUi(t));
+      this.calculateStats();
+    });
   }
 
   calculateStats() {
+    const toNumber = (n: any) => (typeof n === 'number' ? n : Number(n || 0));
     this.stats.totalPaye = this.transactions
       .filter(t => t.status === 'paye')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
+      .reduce((sum, t) => sum + toNumber(t.amount), 0);
+
     this.stats.enAttente = this.transactions
       .filter(t => t.status === 'en-attente')
-      .reduce((sum, t) => sum + t.amount, 0);
-    
+      .reduce((sum, t) => sum + toNumber(t.amount), 0);
+
     this.stats.transactions = this.transactions.length;
   }
 
@@ -339,11 +298,32 @@ export class HistoriqueDesPaiementsComponent implements OnInit {
     // Logique d'export ici
   }
 
-  payNow(transactionId: number) {
+  payNow(transactionId: number | string) {
     console.log('Paiement maintenant pour:', transactionId);
     // Redirection vers le paiement
     this.router.navigate(['/workers/paiement'], { 
       queryParams: { transactionId } 
     });
+  }
+
+  private mapTransactionToUi(t: Transaction) {
+    const spaceName = t.reservation?.espace?.name || 'Espace';
+    const description = t.description || (t.reservation ? 'Paiement réservation' : 'Paiement');
+    const reference = String(t.reservation?.id || t.id || '');
+    const transactionId = String((t as any).transactionId || '');
+    const date = t.createdAt ? new Intl.DateTimeFormat('fr-FR').format(t.createdAt) : '';
+    const status = (t.status || '').toString();
+    const method = t.paymentMethod || '';
+    return {
+      id: t.id,
+      spaceName,
+      description,
+      reference,
+      transactionId,
+      paymentMethod: method,
+      date,
+      amount: t.amount || 0,
+      status
+    };
   }
 }

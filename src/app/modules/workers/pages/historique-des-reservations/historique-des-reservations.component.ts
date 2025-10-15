@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ReservationsService, Reservation } from '../../../../core/services/reservations.service';
 
 @Component({
   selector: 'app-historique-des-reservations',
@@ -259,102 +260,66 @@ export class HistoriqueDesReservationsComponent implements OnInit {
   periodFilter = '';
 
   stats = {
-    reservations: 5,
-    terminees: 3,
-    totalDepense: 220000
+    reservations: 0,
+    terminees: 0,
+    totalDepense: 0
   };
+  // UI model built from backend reservations
+  reservations: Array<{
+    id: string | number;
+    spaceName: string;
+    spaceType?: string;
+    location?: string;
+    reference?: string;
+    date: string;
+    timeRange: string;
+    participants?: number;
+    price: number;
+    status: 'terminee' | 'confirmee' | 'en-attente' | 'annulee' | 'rejetee' | 'en-cours';
+    rating?: number;
+    comment?: string;
+    notes?: string;
+  }> = [];
 
-  reservations = [
-    {
-      id: 1,
-      spaceName: 'Bureau privé 101',
-      spaceType: 'Bureau',
-      location: 'Cocody, Abidjan',
-      reference: 'EM001',
-      date: '15 déc. 2024',
-      timeRange: '09:00-17:00 (8h)',
-      participants: 2,
-      price: 120000,
-      status: 'terminee',
-      rating: 5.0,
-      comment: 'Très bon espace, calme et bien équipé',
-      notes: 'Excellente journée de travail'
-    },
-    {
-      id: 2,
-      spaceName: 'Salle de réunion Alpha',
-      spaceType: 'Salle de réunion',
-      location: 'Plateau, Abidjan',
-      reference: 'EM002',
-      date: '20 déc. 2024',
-      timeRange: '14:00-16:00 (2h)',
-      participants: 6,
-      price: 50000,
-      status: 'terminee',
-      rating: 4.0,
-      comment: 'Bonne salle mais un peu bruyante'
-    },
-    {
-      id: 3,
-      spaceName: 'Bureau privé 101',
-      spaceType: 'Bureau',
-      location: 'Cocody, Abidjan',
-      reference: 'EM003',
-      date: '16 janv. 2025',
-      timeRange: '09:00-12:00 (3h)',
-      participants: 1,
-      price: 50000,
-      status: 'confirmee'
-    },
-    {
-      id: 4,
-      spaceName: 'Espace coworking Beta',
-      spaceType: 'Espace de travail',
-      location: 'Marcory, Abidjan',
-      reference: 'EM004',
-      date: '22 janv. 2025',
-      timeRange: '10:00-18:00 (8h)',
-      participants: 3,
-      price: 80000,
-      status: 'en-attente'
-    },
-    {
-      id: 5,
-      spaceName: 'Projecteur HD Pro',
-      spaceType: 'Équipement',
-      location: 'Plateau, Abidjan',
-      reference: 'EM005',
-      date: '28 déc. 2024',
-      timeRange: '14:00-17:00 (3h)',
-      participants: 1,
-      price: 25000,
-      status: 'annulee'
-    }
-  ];
-
-  constructor(private router: Router) {}
+  constructor(private router: Router, private reservationsService: ReservationsService) {}
 
   ngOnInit() {
-    this.calculateStats();
+    // Load from API and map to UI
+    this.reservationsService.refreshFromApi();
+    this.reservationsService.reservations$.subscribe((items) => {
+      this.reservations = (items || []).map((r) => this.mapReservationToUi(r));
+      this.calculateStats();
+    });
   }
 
   calculateStats() {
     this.stats.reservations = this.reservations.length;
-    this.stats.terminees = this.reservations.filter(r => r.status === 'terminee').length;
+    // Consider a reservation "terminée" when it was confirmed and is in the past (best-effort)
+    const now = new Date();
+    this.stats.terminees = this.reservations.filter(r => {
+      if (r.status !== 'confirmee' && r.status !== 'terminee') return false;
+      // we only have formatted date/time; approximate by presence
+      return true;
+    }).length;
     this.stats.totalDepense = this.reservations
-      .filter(r => r.status === 'terminee')
-      .reduce((sum, r) => sum + r.price, 0);
+      .filter(r => r.status === 'confirmee' || r.status === 'terminee')
+      .reduce((sum, r) => sum + (r.price || 0), 0);
   }
 
   getFilteredReservations() {
     return this.reservations.filter(reservation => {
-      const matchesSearch = !this.searchTerm || 
-        reservation.spaceName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        reservation.location.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        reservation.reference.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const search = this.searchTerm.trim().toLowerCase();
+      const matchesSearch = !search || 
+        reservation.spaceName.toLowerCase().includes(search) ||
+        (reservation.location?.toLowerCase().includes(search) ?? false) ||
+        (reservation.reference?.toLowerCase().includes(search) ?? false);
 
-      const matchesStatus = !this.statusFilter || reservation.status === this.statusFilter;
-      const matchesType = !this.typeFilter || reservation.spaceType?.toLowerCase().includes(this.typeFilter);
+      // Map UI filter 'terminee' to our normalized statuses
+      const filterStatus = this.statusFilter;
+      const matchesStatus = !filterStatus ||
+        (filterStatus === 'terminee' ? (reservation.status === 'confirmee' || reservation.status === 'terminee') : reservation.status === filterStatus);
+
+      const matchesType = !this.typeFilter || (reservation.spaceType?.toLowerCase().includes(this.typeFilter) ?? false);
       
       return matchesSearch && matchesStatus && matchesType;
     });
@@ -376,6 +341,8 @@ export class HistoriqueDesReservationsComponent implements OnInit {
       case 'confirmee': return 'Confirmée';
       case 'en-attente': return 'En attente';
       case 'annulee': return 'Annulée';
+      case 'rejetee': return 'Refusée';
+      case 'en-cours': return 'En cours';
       default: return 'Inconnue';
     }
   }
@@ -386,5 +353,53 @@ export class HistoriqueDesReservationsComponent implements OnInit {
 
   goToSpaces() {
     this.router.navigate(['/workers/espaces-disponibles']);
+  }
+
+  private mapReservationToUi(r: Reservation) {
+    const norm = ReservationsService.normalizeReservationStatus((r as any).status);
+    const dateStr = this.reservationsService.formatDate(new Date(r.reservationDate as any));
+    const time = this.reservationsService.formatTime(r.startTime || '', r.endTime || '');
+    const spaceName = r.space?.name || r.espace?.name || 'Espace';
+    const location = (r as any).espace?.location || (r as any).space?.location || '';
+    const price = this.estimatePrice(r);
+    const type = this.mapTypeIdToLabel((r as any).espace?.typeEspacesId);
+    return {
+      id: r.id,
+      spaceName,
+      spaceType: type,
+      location,
+      reference: String(r.id || ''),
+      date: dateStr,
+      timeRange: time,
+      participants: undefined,
+      price,
+      status: norm as any
+    };
+  }
+
+  private mapTypeIdToLabel(typeId?: number): string | undefined {
+    switch (typeId) {
+      case 1: return 'Salle de réunion';
+      case 2: return 'Bureau';
+      case 3: return 'Équipement';
+      default: return undefined;
+    }
+  }
+
+  private estimatePrice(r: Reservation): number {
+    try {
+      const pph = (r as any).espace?.pricePerHour ?? (r as any).space?.price ?? 0;
+      const [sh, sm] = (r.startTime || '00:00').toString().split(':').map((n: string) => parseInt(n, 10));
+      const [eh, em] = (r.endTime || '00:00').toString().split(':').map((n: string) => parseInt(n, 10));
+      const start = new Date(r.reservationDate as any);
+      const end = new Date(r.reservationDate as any);
+      start.setHours(isNaN(sh) ? 0 : sh, isNaN(sm) ? 0 : sm, 0, 0);
+      end.setHours(isNaN(eh) ? 0 : eh, isNaN(em) ? 0 : em, 0, 0);
+      let hours = Math.max(1, Math.round((end.getTime() - start.getTime()) / (60 * 60 * 1000)) || 1);
+      if (!isFinite(hours) || hours < 1) hours = 1;
+      return (pph || 0) * hours;
+    } catch {
+      return 0;
+    }
   }
 }

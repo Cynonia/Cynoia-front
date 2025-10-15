@@ -13,6 +13,7 @@ import {
   SignInCredentials,
 } from '../../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-signin-form',
@@ -24,6 +25,13 @@ import { Router } from '@angular/router';
       (ngSubmit)="onSubmit()"
       class="flex flex-col gap-6"
     >
+      <!-- Server error banner -->
+      <div *ngIf="formError" class="rounded-md border border-red-200 bg-red-50 text-red-800 p-3 text-sm flex items-start gap-2">
+        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span class="leading-5">{{ formError }}</span>
+      </div>
       <!-- Email Input -->
       <ui-input
         label="Email Address"
@@ -107,11 +115,13 @@ export class SigninFormComponent {
 
   signInForm: FormGroup;
   loading = false;
+  formError: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toast: ToastService
   ) {
     this.signInForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -152,12 +162,14 @@ export class SigninFormComponent {
 
   onSubmit(): void {
     if (this.signInForm.valid) {
+      this.formError = null;
       this.loading = true;
       console.log(this.signInForm.value);
       this.authService.signIn(this.signInForm.value).subscribe({
         next: (response) => {
           console.log('login réussie ✅', response);
           this.loading = false;
+          this.formError = null;
           if (
             response.data.user.entity 
           ) {
@@ -171,6 +183,17 @@ export class SigninFormComponent {
         error: (err) => {
           console.error('Erreur de la connexion ❌', err);
           this.loading = false;
+          const status = err?.status ?? err?.error?.status;
+          let msg = err?.error?.message || err?.message || 'Erreur lors de la connexion';
+          if (status === 401 || status === 403) {
+            msg = 'Email ou mot de passe incorrect.';
+          } else if (status === 0) {
+            msg = 'Impossible de contacter le serveur. Vérifiez votre connexion internet.';
+          } else if (status >= 500) {
+            msg = 'Le serveur a rencontré un problème. Réessayez plus tard.';
+          }
+          this.formError = msg;
+          this.toast.error(msg);
         },
       });
     } else {

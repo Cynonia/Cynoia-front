@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { filter, take } from 'rxjs';
 import { EspaceService } from '../../../../core/services/espace.service';
 
 @Component({
@@ -207,16 +210,26 @@ export class EspacesDisponiblesComponent implements OnInit {
   selectedType = '';
   selectedPriceRange = '';
 
-  constructor(private espaceService: EspaceService, private router: Router) {}
+  constructor(private espaceService: EspaceService, private router: Router, private auth: AuthService, private toast: ToastService) {}
 
   ngOnInit(): void {
-    this.loadSpaces();
+    console.info('[Workers] EspacesDisponibles init -> wait for user entity and load spaces');
+    this.auth.currentUser$.pipe(
+      filter((u: any) => !!u && !!u.entity?.id),
+      take(1)
+    ).subscribe({
+      next: (user) => {console.log(user);
+       this.loadSpacesByEntity(user!.entity.id)},
+      error: () => this.toast.error("Impossible de déterminer l'entité de l'utilisateur")
+    });
   }
 
-  private loadSpaces(): void {
+  private loadSpacesByEntity(entityId: number): void {
+    console.info('[Workers] loadSpacesByEntity() calling EspaceService.getAllByEntity()', entityId);
     this.isLoading = true;
-    this.espaceService.getAll().subscribe({
+    this.espaceService.getAllByEntity(entityId).subscribe({
       next: (response: any) => {
+        console.info('[Workers] spaces response', response);
         const apiData = response.success && response.data ? response.data : response;
         this.spaces = this.transformApiDataToUiData(apiData).filter(space => space.status === 'disponible');
         this.filteredSpaces = [...this.spaces];
@@ -224,6 +237,7 @@ export class EspacesDisponiblesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading espaces:', error);
+        this.toast.error("Erreur lors du chargement des espaces de l'entité");
         this.isLoading = false;
       }
     });

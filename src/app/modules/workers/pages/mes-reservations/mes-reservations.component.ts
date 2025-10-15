@@ -221,6 +221,9 @@ export class MesReservationsComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Ensure data is loaded from backend
+    this.reservationsService.refreshFromApi();
+
     // Watch reservations from API to keep calendar source fresh
     this.reservationsService.reservations$.subscribe(() => {
       // Recompute displayed reservations when source changes; CalendarService reads from ReservationsService internally

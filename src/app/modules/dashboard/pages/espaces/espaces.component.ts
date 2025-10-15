@@ -11,6 +11,7 @@ import {
 import { EspaceService } from '../../../../core/services/espace.service';
 import { EspaceFormComponent } from './espace-modal.component';
 import { ModalService } from '../../../../core/services/modal.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 // Interface pour les données de l'API
 interface ApiEspace {
@@ -473,7 +474,7 @@ export class EspacesComponent implements OnInit {
     { value: 'equipement' as const, label: 'Équipements' },
   ];
 
-  constructor(private espaceService: EspaceService, private fb: FormBuilder, private modal: ModalService) {}
+  constructor(private espaceService: EspaceService, private fb: FormBuilder, private modal: ModalService, private toast: ToastService) {}
 
   ngOnInit(): void {
     this.initForm();
@@ -513,6 +514,7 @@ export class EspacesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading spaces:', error);
+        this.toast.error('Erreur lors du chargement des espaces');
         this.isLoading = false;
       },
     });
@@ -602,9 +604,12 @@ export class EspacesComponent implements OnInit {
       next: () => {
         this.spaces = this.spaces.filter(s => s.id !== space.id);
         this.applyFilters(); 
+        this.toast.success('Espace supprimé');
       },
       error: (error) => {
         console.error('Error deleting space', error);
+        const msg = error?.error?.message || error?.message || 'Erreur lors de la suppression de l\'espace';
+        this.toast.error(msg);
       },
     });
   }
