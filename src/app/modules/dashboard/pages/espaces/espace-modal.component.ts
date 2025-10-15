@@ -357,9 +357,12 @@ export class EspaceFormComponent implements OnInit {
       }
 
       this.closeModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la sauvegarde vers le backend:', error);
-      this.toastService.error('Erreur lors de la sauvegarde de l\'espace');
+      const serverMsg = error?.error?.message || error?.message;
+      const validationDetails = Array.isArray(error?.error?.errors) ? error.error.errors.map((e: any) => e.message || e).join(', ') : '';
+      const fullMsg = [serverMsg, validationDetails].filter(Boolean).join(' — ');
+      this.toastService.error(fullMsg || 'Erreur lors de la sauvegarde de l\'espace');
     } finally {
       this.isLoading = false;
     }

@@ -558,10 +558,11 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
           if (this.currentUserId && p.userId === this.currentUserId) continue;
           const id = String(p.userId);
           if (!usersMap.has(id)) {
-            const name = p.user ? `${p.user.firstName || ''} ${p.user.lastName || ''}`.trim() : `Utilisateur ${p.userId}`;
+            const fullName = p.user ? `${(p.user.firstName || '').trim()} ${(p.user.lastName || '').trim()}`.trim() : '';
+            const name = fullName;
             usersMap.set(id, {
               id,
-              name: name || `Utilisateur ${id}`,
+              name: name ,
               role: '',
               avatar: p.user?.avatar || 'https://via.placeholder.com/40',
               // Backend doesn't provide presence yet; mark as online for discoverability
@@ -641,6 +642,11 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
     }
     this.messagesService.createOrGetPrivateConversation(targetId).subscribe((conv) => {
       const uiConv = this.mapConversationToUi(conv);
+      // Ensure display as just the user's full name; fallback to 'Utilisateur' (no id)
+      if (uiConv.participants && uiConv.participants[0]) {
+        const labelName = user?.name?.trim();
+        uiConv.participants[0].name = labelName || 'Utilisateur';
+      }
       // Prepend if not existing
       if (!this.conversations.find(c => c.id === uiConv.id)) {
         this.conversations.unshift(uiConv);
@@ -857,7 +863,7 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
 
   // Mapping helpers
   private mapSvcMessageToUi(m: SvcMessage): Message {
-    const senderName = m.sender ? `${m.sender.firstName || ''} ${m.sender.lastName || ''}`.trim() : `Utilisateur ${m.senderId}`;
+    const senderName = m.sender ? `${m.sender.firstName || ''} ${m.sender.lastName || ''}`.trim() : 'Utilisateur';
     return {
       id: String(m.id),
       senderId: String(m.senderId),
@@ -873,10 +879,11 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
     const currentId = this.currentUserId;
     if (Array.isArray(c.participants) && c.participants.length > 0) {
       const other = c.participants.find(p => !currentId || p.userId !== currentId) || c.participants[0];
-      const name = other?.user ? `${other.user.firstName || ''} ${other.user.lastName || ''}`.trim() : `Utilisateur ${other?.userId ?? ''}`;
+      const fullName = other?.user ? `${(other.user.firstName || '').trim()} ${(other.user.lastName || '').trim()}`.trim() : '';
+      const name = fullName || 'Utilisateur';
       participants.push({
         id: String(other?.userId ?? ''),
-        name: name || 'Utilisateur',
+        name: name,
         role: '',
         avatar: other?.user?.avatar || undefined,
         isOnline: true
@@ -895,7 +902,9 @@ export class MessagesComponent implements OnInit, AfterViewChecked {
   private mapConversationToGroupChat(c: SvcConversation): GroupChat {
     const participants: User[] = (c.participants || []).map(p => ({
       id: String(p.userId),
-      name: p.user ? `${p.user.firstName || ''} ${p.user.lastName || ''}`.trim() : `Utilisateur ${p.userId}`,
+      name: p.user && (`${(p.user.firstName || '').trim()} ${(p.user.lastName || '').trim()}`.trim())
+        ? `${(`${(p.user.firstName || '').trim()} ${(p.user.lastName || '').trim()}`).trim()}`
+        : 'Utilisateur',
       role: '',
       avatar: p.user?.avatar || 'https://via.placeholder.com/40',
       isOnline: false
