@@ -72,6 +72,21 @@ export interface ReservationStats {
   providedIn: 'root',
 })
 export class ReservationsService {
+  /**
+   * Récupère les réservations d'un utilisateur (pour Workers)
+   */
+  getReservationsByUserId(userId: number): Observable<Reservation[]> {
+    return this.api.get<Reservation[]>(`${this.endpoint}/user/${userId}`).pipe(
+      map((response: ApiResponse<Reservation[]>) => {
+        return (response.data || []).map((reservation: any) => ({
+          ...reservation,
+          reservationDate: new Date(reservation.reservationDate || reservation.date),
+          createdAt: new Date(reservation.createdAt),
+          updatedAt: new Date(reservation.updatedAt),
+        }));
+      })
+    );
+  }
   currentUser$ = this.authService.currentUser$;
 
   private reservationsSubject = new BehaviorSubject<Reservation[]>([]);

@@ -13,10 +13,21 @@ export interface Transaction {
   createdAt?: Date;
   reservation?: any; // may embed reservation with espace
   description?: string;
+  paymentMode?: { id: number; name: string };
+  totalAmount?: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class TransactionsService {
+  /**
+   * Récupère les transactions d'un utilisateur (pour Workers)
+   */
+  getTransactionsByUserId(userId: number): Observable<Transaction[]> {
+    return this.api.get<any[]>(`${this.endpoint}/user/${userId}`).pipe(
+      map((resp) => this.extractData<any[]>(resp)),
+      map((items) => (items || []).map(this.mapTransaction))
+    );
+  }
   private readonly endpoint = '/transactions';
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   public transactions$ = this.transactionsSubject.asObservable();
@@ -71,6 +82,8 @@ export class TransactionsService {
       createdAt,
       reservation: t?.reservation || undefined,
       description: t?.description || undefined,
+      totalAmount: typeof t?.totalAmount === 'number' ? t.totalAmount : Number(t?.totalAmount || 0),
+      paymentMode: t?.paymentMode || undefined,
     } as Transaction;
   };
 }

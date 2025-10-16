@@ -208,19 +208,11 @@ import { ReservationsService, Reservation } from '../../../../core/services/rese
 
               <!-- Statut et actions -->
               <div class="flex flex-col items-end gap-3">
-                <span 
-                  [class]="getStatusClass(reservation.status)"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-                  {{ getStatusLabel(reservation.status) }}
-                </span>
-
-                <!-- Actions selon le statut -->
-                <div class="flex gap-2" *ngIf="reservation.status === 'confirmee'">
-                  <button 
-                    class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    Confirmer
-                  </button>
-                </div>
+				<span 
+				  [class]="getStatusClass(reservation.status)"
+				  class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
+				  {{ getStatusLabel(reservation.status) }}
+				</span>
 
                 <!-- Menu d'actions -->
                 <div class="relative">

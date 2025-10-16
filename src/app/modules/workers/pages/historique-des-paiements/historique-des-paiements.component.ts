@@ -173,12 +173,6 @@ import { TransactionsService, Transaction } from '../../../../core/services/tran
                   {{ transaction.amount | number }} FCFA
                 </div>
                 
-                <span 
-                  [class]="getStatusClass(transaction.status)"
-                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium">
-                  {{ getStatusLabel(transaction.status) }}
-                </span>
-
                 <!-- Action pour les paiements en attente -->
                 <button *ngIf="transaction.status === 'en-attente'" 
                         (click)="payNow(transaction.id)"
@@ -223,30 +217,34 @@ export class HistoriqueDesPaiementsComponent implements OnInit {
     paymentMethod: string;
     date: string;
     amount: number;
+    totalAmount?: number;
     status: string;
   }> = [];
 
   constructor(private router: Router, private transactionsService: TransactionsService) {}
 
   ngOnInit() {
-    this.transactionsService.refreshFromApi();
-    this.transactionsService.transactions$.subscribe((items) => {
-      this.transactions = (items || []).map((t) => this.mapTransactionToUi(t));
-      this.calculateStats();
-    });
+    // Récupère le userId courant
+    const userId = this.transactionsService['auth']?.currentUser?.id;
+    if (userId) {
+      this.transactionsService.getTransactionsByUserId(userId).subscribe((items) => {
+        this.transactions = (items || []).map((t) => this.mapTransactionToUi(t));
+        this.calculateStats();
+      });
+    }
   }
 
   calculateStats() {
     const toNumber = (n: any) => (typeof n === 'number' ? n : Number(n || 0));
     this.stats.totalPaye = this.transactions
       .filter(t => t.status === 'paye')
-      .reduce((sum, t) => sum + toNumber(t.amount), 0);
+      .reduce((sum, t) => sum + toNumber(t.totalAmount ?? t.amount), 0);
 
     this.stats.enAttente = this.transactions
       .filter(t => t.status === 'en-attente')
-      .reduce((sum, t) => sum + toNumber(t.amount), 0);
+      .reduce((sum, t) => sum + toNumber(t.totalAmount ?? t.amount), 0);
 
-    this.stats.transactions = this.transactions.length;
+      this.stats.transactions = this.transactions.filter(t => ['paye','en-attente','echec','rembourse'].includes(t.status)).length;
   }
 
   getFilteredTransactions() {
@@ -310,10 +308,16 @@ export class HistoriqueDesPaiementsComponent implements OnInit {
     const spaceName = t.reservation?.espace?.name || 'Espace';
     const description = t.description || (t.reservation ? 'Paiement réservation' : 'Paiement');
     const reference = String(t.reservation?.id || t.id || '');
-    const transactionId = String((t as any).transactionId || '');
-    const date = t.createdAt ? new Intl.DateTimeFormat('fr-FR').format(t.createdAt) : '';
-    const status = (t.status || '').toString();
-    const method = t.paymentMethod || '';
+    const transactionId = String(t.id || '');
+    // Date de la transaction ou de la réservation
+    const date = t.reservation?.reservationDate ? new Intl.DateTimeFormat('fr-FR').format(new Date(t.reservation.reservationDate)) : '';
+    // Statut de la réservation (ex: CONFIRMEE)
+    let status = (t.reservation?.status || t.status || '').toString().toLowerCase();
+    if (status === 'confirmee') status = 'paye';
+    // Méthode de paiement
+    const method = t.paymentMode?.name?.toLowerCase() || t.paymentMethod || '';
+    // Montant total
+    const amount = typeof t.totalAmount === 'number' ? t.totalAmount : (t.amount || 0);
     return {
       id: t.id,
       spaceName,
@@ -322,7 +326,8 @@ export class HistoriqueDesPaiementsComponent implements OnInit {
       transactionId,
       paymentMethod: method,
       date,
-      amount: t.amount || 0,
+      amount,
+      totalAmount: amount,
       status
     };
   }
