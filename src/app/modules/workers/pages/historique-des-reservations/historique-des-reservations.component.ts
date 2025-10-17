@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ReservationsService, Reservation } from '../../../../core/services/reservations.service';
+import { AuthService, User } from '../../../../core/services/auth.service';
+import { first } from 'rxjs/operators';
 
 @Component({
   selector: 'app-historique-des-reservations',
@@ -273,14 +275,24 @@ export class HistoriqueDesReservationsComponent implements OnInit {
     notes?: string;
   }> = [];
 
-  constructor(private router: Router, private reservationsService: ReservationsService) {}
+  constructor(
+    private router: Router,
+    private reservationsService: ReservationsService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
-    // Load from API and map to UI
-    this.reservationsService.refreshFromApi();
-    this.reservationsService.reservations$.subscribe((items) => {
-      this.reservations = (items || []).map((r) => this.mapReservationToUi(r));
-      this.calculateStats();
+    // Fetch reservations by userId (not entityId)
+    this.authService.currentUser$.pipe(first()).subscribe((currentUser: User | null) => {
+      if (currentUser && currentUser.id) {
+        this.reservationsService.getReservationsByUserId(currentUser.id).subscribe((items) => {
+          this.reservations = (items || []).map((r) => this.mapReservationToUi(r));
+          this.calculateStats();
+        });
+      } else {
+        this.reservations = [];
+        this.calculateStats();
+      }
     });
   }
 

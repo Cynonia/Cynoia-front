@@ -48,6 +48,7 @@ export interface Reservation {
   spaceId?: string;
   memberId?: string;
   member?: Member;
+  userId?: number;
   // Resolved space reference
   space?: Space | undefined;
 }
@@ -130,7 +131,7 @@ export class ReservationsService {
     private authService: AuthService,
     private espaceService: EspaceService
   ) {
-    // Do not auto-fetch on construction; we'll lazy-load on demand and cache
+    // Do not auto-fetch reservations; only fetch when explicitly called from a component/page
   }
 
   /**
@@ -278,11 +279,14 @@ export class ReservationsService {
     
 
   createReservation(
-    reservationData: any
+    reservationData: any,
+    userId?: number,
+    router?: any
   ): Observable<Reservation> {
+    const payload = { ...reservationData, userId };
     return this.currentUser$.pipe(
       first(),
-      switchMap(() => this.api.post<Reservation>(this.endpoint, reservationData)),
+      switchMap(() => this.api.post<Reservation>(this.endpoint, payload)),
       map((response: ApiResponse<Reservation>) => {
         const data = response.data as any;
         const reservation: Reservation = {
@@ -292,10 +296,15 @@ export class ReservationsService {
           updatedAt: new Date(data.updatedAt),
         };
 
-  // Append to local subject so UI updates immediately
-  const currentReservations = this.reservationsSubject.value;
-  const updatedReservations = [...currentReservations, reservation];
-  this.reservationsSubject.next(updatedReservations);
+        // Append to local subject so UI updates immediately
+        const currentReservations = this.reservationsSubject.value;
+        const updatedReservations = [...currentReservations, reservation];
+        this.reservationsSubject.next(updatedReservations);
+
+        // Redirect after creation
+        if (router) {
+          router.navigate(['/workers/historique-reservations']);
+        }
 
         return reservation;
       }),

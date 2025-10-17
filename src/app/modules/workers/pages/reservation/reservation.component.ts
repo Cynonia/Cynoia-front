@@ -6,6 +6,8 @@ import { SpacesService, Space } from '../../../../core/services/spaces.service';
 import { Espace } from '../../../../core/models/espace.model';
 import { EspaceService } from '../../../../core/services/espace.service';
 import { StoreService } from '../../../../core/services/store.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface ReservationFormData {
   spaceId: string;
@@ -68,7 +70,9 @@ export class ReservationComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private spacesService: EspaceService,
-    private store: StoreService
+    private store: StoreService,
+    private authService: AuthService,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -173,9 +177,10 @@ export class ReservationComponent implements OnInit {
 
   proceedToPayment(): void {
     if (this.isFormValid()) {
-      // Sauvegarder les données de réservation dans le service ou localStorage
+      const userId = this.authService.currentUser?.id;
       const reservationData = {
         ...this.formData,
+        userId,
         space: this.space,
         totalCost: this.getTotalCost(),
         spaceCost: this.getSpaceCost(),
@@ -185,9 +190,15 @@ export class ReservationComponent implements OnInit {
           .filter((eq) => eq),
       };
 
-      // Store pending reservation in StoreService (in-memory + optional sessionStorage)
-      this.store.savePendingReservation(reservationData, true);
-      this.router.navigate(['/workers/paiement']);
+      // Save reservation and redirect to payment
+      try {
+        this.store.savePendingReservation(reservationData, true);
+        this.router.navigate(['/workers/paiement']);
+      } catch (err) {
+        this.toast.error('Erreur lors de la création de la réservation', 'Erreur');
+      }
+    } else {
+      this.toast.error('Veuillez remplir tous les champs requis', 'Erreur');
     }
   }
 }

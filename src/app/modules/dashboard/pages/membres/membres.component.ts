@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MembersService, MemberProfile, MemberRole, MemberStats, MemberFilter, CreateMemberData } from '../../../../core/services/members.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { ModalService } from '../../../../core/services/modal.service';
 import { InvitationService } from '../../../../core/services/invitation.service';
 import { RolesService, Role } from '../../../../core/services/roles.service';
@@ -26,7 +27,7 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
           </div>
         </div>
         
-        <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="flex items-center gap-2 flex-shrink-0">
           <button 
             (click)="openInviteModal()"
             class="inline-flex items-center gap-1.5 sm:gap-2 bg-purple-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm whitespace-nowrap">
@@ -250,16 +251,17 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Rôle</label>
               <select 
-                [(ngModel)]="inviteForm.role"
-                name="role"
+                [ngModel]="inviteForm.roleId"
+                (ngModelChange)="onRoleChange($event)"
+                name="roleId"
                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                <option *ngFor="let role of availableRoles" [value]="role.name.toLowerCase()">
+                <option *ngFor="let role of availableRoles" [ngValue]="role.id">
                   {{ role.name }}
                 </option>
                 <!-- Fallback options si les rôles ne sont pas encore chargés -->
-                <option *ngIf="availableRoles.length === 0" value="member">Membre</option>
-                <option *ngIf="availableRoles.length === 0" value="manager">Gestionnaire</option>
-                <option *ngIf="availableRoles.length === 0" value="client">Client</option>
+                <option *ngIf="availableRoles.length === 0" [ngValue]="3">Membre</option>
+                <option *ngIf="availableRoles.length === 0" value="2">Gestionnaire</option>
+                <option *ngIf="availableRoles.length === 0" value="4">Client</option>
               </select>
             </div>
 
@@ -297,6 +299,10 @@ import { RolesService, Role } from '../../../../core/services/roles.service';
   `
 })
 export class MembresComponent implements OnInit {
+  onRoleChange(roleId: number) {
+    const selectedRole = this.availableRoles.find(r => r.id === roleId);
+    this.inviteForm.roleId = roleId;
+  }
   members: MemberProfile[] = [];
   filteredMembers: MemberProfile[] = [];
   stats: MemberStats = {
@@ -319,8 +325,9 @@ export class MembresComponent implements OnInit {
   showInviteModal = false;
   isInviting = false;
   inviteForm: CreateMemberData = {
-    email: '',
-    role: 'member'
+  email: '',
+  role: 'member',
+  roleId: undefined
   };
 
   // Rôles dynamiques
@@ -336,10 +343,11 @@ export class MembresComponent implements OnInit {
   ];
 
   constructor(
-    private membersService: MembersService, 
-    private modal: ModalService,
-    private invitationService: InvitationService,
-    private rolesService: RolesService
+  private membersService: MembersService, 
+  private modal: ModalService,
+  private invitationService: InvitationService,
+  private rolesService: RolesService,
+  private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -504,6 +512,11 @@ export class MembresComponent implements OnInit {
     this.isInviting = true;
     
     try {
+      // Set userId to connected user's id
+      const connectedUserId = this.authService?.currentUser?.id;
+      if (connectedUserId) {
+        this.inviteForm.userId = connectedUserId;
+      }
       this.membersService.sendInvitation(this.inviteForm).subscribe({
         next: (result) => {
           console.log('✅ Invitation envoyée avec succès:', result);

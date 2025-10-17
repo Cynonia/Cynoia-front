@@ -43,6 +43,8 @@ export interface CreateMemberData {
   name?: string;
   email: string;
   role: MemberRole;
+  roleId?: number;
+  userId?: number;
 }
 
 @Injectable({
@@ -59,10 +61,7 @@ export class MembersService {
     private rolesService: RolesService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    // Load members only in the browser to avoid SSR prerender network calls
-    if (isPlatformBrowser(this.platformId)) {
-      this.refreshMembersFromApi().subscribe();
-    }
+    // Do not auto-fetch members; only fetch when explicitly called from a component/page
   }
 
   // Normalize API responses that may be wrapped or raw arrays
@@ -242,7 +241,9 @@ export class MembersService {
       switchMap((entityId) => {
         const invitationData: InvitationRequest = {
           email: memberData.email,
-          entityId
+          entityId,
+          roleId: memberData.roleId,
+          userId: memberData.userId
         };
 
         return this.invitationService.sendInvitation(invitationData).pipe(

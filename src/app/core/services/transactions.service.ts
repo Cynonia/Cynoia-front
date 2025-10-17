@@ -32,7 +32,9 @@ export class TransactionsService {
   private transactionsSubject = new BehaviorSubject<Transaction[]>([]);
   public transactions$ = this.transactionsSubject.asObservable();
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(private api: ApiService, private auth: AuthService) {
+    // Do not auto-fetch transactions; only fetch when explicitly called from a component/page
+  }
 
   private extractData<T>(resp: any): T {
     if (resp && Array.isArray(resp)) return resp as T;
