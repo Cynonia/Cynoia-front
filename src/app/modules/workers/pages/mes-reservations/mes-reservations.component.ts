@@ -186,8 +186,8 @@ export class MesReservationsComponent implements OnInit {
   // Statistiques
   stats = {
     aVenir: 0,
-    confirmees: 2, 
-    enAttente: 1
+    confirmees: 0,
+    enAttente: 0
   };
 
   // reservations used for list UI (flattened calendar events)
@@ -224,7 +224,8 @@ export class MesReservationsComponent implements OnInit {
     // Récupère le userId courant
     const userId = this.reservationsService['authService']?.currentUser?.id;
     if (userId) {
-      this.reservationsService.getReservationsByUserId(userId).subscribe(() => {
+      this.reservationsService.getReservationsByUserId(userId).subscribe((reservations) => {
+        this.reservations = reservations;   
         this.updateDisplayedReservations();
       });
     }

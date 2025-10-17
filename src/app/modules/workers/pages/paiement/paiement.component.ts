@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ReservationsService } from '../../../../core/services';
 import { StoreService } from '../../../../core/services/store.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface PaymentMethod {
   id: string;
@@ -276,8 +278,12 @@ export class PaiementComponent implements OnInit {
   constructor(
     private router: Router,
     private reservationsService: ReservationsService,
-    private store: StoreService
-  ) {}
+    private store: StoreService,
+    private toast: ToastService,
+    private authService: AuthService
+  ) {
+    this.reservationData = this.store.getPendingReservation();
+  }
 
   ngOnInit(): void {
     this.loadReservationData();
@@ -358,15 +364,17 @@ export class PaiementComponent implements OnInit {
       // Simuler le traitement du paiement
       await new Promise(resolve => setTimeout(resolve, 2000));
 
+      const userId = this.reservationData.userId ?? this.authService.currentUser?.id;
       const reservation = {
         status: "en-cours",
         espacesId: this.reservationData.space.id,
         startTime: this.reservationData.startTime,
         endTime: this.reservationData.endTime,
         reservationDate: this.reservationData.date,
-      }
+        userId
+      };      
 
-      this.reservationsService.createReservation(reservation).subscribe({
+      this.reservationsService.createReservation(reservation,userId).subscribe({
         next: (res) => {
           console.log('Réservation créée avec succès:', res);
         },
@@ -389,12 +397,13 @@ export class PaiementComponent implements OnInit {
   this.store.savePendingReservation(confirmationData, true);
   this.store.clearPendingReservation();
 
-      // Rediriger vers la page de confirmation
-      this.router.navigate(['/workers/confirmation']);
+  // Toast success and redirect to historique-reservations
+  this.toast.success('Paiement et réservation confirmés !', 'Succès');
+  this.router.navigate(['/workers/historique-reservations']);
 
     } catch (error) {
+      this.toast.error('Erreur lors du paiement', 'Erreur');
       console.error('Erreur lors du paiement:', error);
-      // Gérer l'erreur (afficher un message, etc.)
     } finally {
       this.isProcessing = false;
     }
