@@ -62,6 +62,9 @@ export class MembersService {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Do not auto-fetch members; only fetch when explicitly called from a component/page
+    if (isPlatformBrowser(this.platformId)) {
+      this.refreshMembersFromApi().subscribe();
+    }
   }
 
   // Normalize API responses that may be wrapped or raw arrays
