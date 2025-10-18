@@ -282,7 +282,8 @@ export class HistoriqueDesReservationsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Fetch reservations by userId (not entityId)
+    // Force backend fetch before fetching reservations by userId
+    this.reservationsService.refreshFromApi();
     this.authService.currentUser$.pipe(first()).subscribe((currentUser: User | null) => {
       if (currentUser && currentUser.id) {
         this.reservationsService.getReservationsByUserId(currentUser.id).subscribe((items) => {

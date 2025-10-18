@@ -1,84 +1,134 @@
-<div class="min-h-screen bg-gray-50 flex flex-col">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 flex flex-col">
   <!-- Header -->
   <header
-    class="flex justify-between items-center px-6 py-4 bg-white shadow-md"
+    class="flex justify-between items-center px-6 py-5 bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-100"
   >
-    <img src="assets/images/logo.svg" alt="Cynoia" class="h-8" />
-    <button  class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+    <img src="assets/images/logo.svg" alt="Cynoia" class="h-9" />
+    <button class="flex items-center gap-3 text-gray-600 hover:text-gray-900 transition-colors duration-200 group">
       <img
         src="/assets/images/Webinar-pana.png"
         alt=""
-        class="w-8 h-8 rounded-full"
+        class="w-9 h-9 rounded-full ring-2 ring-gray-100 group-hover:ring-gray-200 transition-all duration-200"
       />
-      <span (click)="logout()">Déconnexion</span>
+      <span (click)="logout()" class="font-medium">Déconnexion</span>
     </button>
   </header>
+
   <!-- Main -->
-  <main class="flex-grow flex justify-center items-start py-12 px-4">
-    <div class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-lg">
+  <main class="flex-grow flex justify-center items-start py-6 px-4">
+    <div class="w-full max-w-2xl bg-white p-6 rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
       <!-- Title -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-3 shadow-lg shadow-blue-500/30">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
           Créer votre organisation
         </h1>
-        <p class="text-gray-600 mt-2">
+        <p class="text-gray-500">
           Votre espace pour gérer votre équipe et vos projets.
         </p>
       </div>
+
       <form
         [formGroup]="organisationForm"
         (ngSubmit)="onSubmit()"
-        class="space-y-6"
+        class="space-y-5"
       >
+        <!-- Company Info Section -->
         <div class="space-y-4">
-          <label class="block text-gray-700 font-medium">
-            Nom de l'entreprise <span class="text-red-500">*</span>
-          </label>
-          <ui-input
-            type="text"
-            placeholder="Ex: Bakemono"
-            formControlName="name"
-            [error]="getFieldError('name')"
-            [touched]="isFieldTouched('name')"
-          ></ui-input>
+          <div class="space-y-1.5">
+            <label class="block text-gray-800 font-semibold text-sm tracking-wide">
+              Nom de l'entreprise <span class="text-red-500">*</span>
+            </label>
+            <ui-input
+              type="text"
+              placeholder="Ex: Bakemono"
+              formControlName="name"
+              [error]="getFieldError('name')"
+              [touched]="isFieldTouched('name')"
+            ></ui-input>
+          </div>
 
-          <label class="block text-gray-700 font-medium">
-            Domaine <span class="text-red-500">*</span>
-          </label>
-          <ui-input
-            type="text"
-            placeholder="Ex: bakemono.com"
-            formControlName="domaine"
-            [error]="getFieldError('domaine')"
-            [touched]="isFieldTouched('domaine')"
-          ></ui-input>
+          <div class="space-y-1.5">
+            <label class="block text-gray-800 font-semibold text-sm tracking-wide">
+              Domaine <span class="text-red-500">*</span>
+            </label>
+            <ui-input
+              type="text"
+              placeholder="Ex: bakemono.com"
+              formControlName="domaine"
+              [error]="getFieldError('domaine')"
+              [touched]="isFieldTouched('domaine')"
+            ></ui-input>
+          </div>
 
-          <label class="block text-gray-700 font-medium"
-            >Logo de l'entreprise</label
-          >
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onFileChange($event, 'logo')"
-          />
+          <div class="space-y-1.5">
+            <label class="block text-gray-800 font-semibold text-sm tracking-wide">
+              Logo de l'entreprise
+            </label>
+            <div class="relative">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onFileChange($event, 'logo')"
+                class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gradient-to-r file:from-blue-500 file:to-purple-600 file:text-white hover:file:from-blue-600 hover:file:to-purple-700 file:cursor-pointer file:transition-all file:duration-200 file:shadow-md hover:file:shadow-lg cursor-pointer"
+              />
+            </div>
+          </div>
         </div>
 
-        <div class="space-y-4">
-          <label class="block text-gray-700 font-medium"
-            >Couleur principale</label
-          >
-          <ui-input type="color" formControlName="couleur"></ui-input>
+        <!-- Customization Section -->
+        <div class="pt-4 border-t border-gray-100">
+          <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+            </svg>
+            Personnalisation
+          </h3>
+          
+          <div class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-gray-800 font-semibold text-sm tracking-wide">
+                Couleur principale
+              </label>
+              <div class="flex items-center gap-4">
+                <ui-input 
+                  type="color" 
+                  formControlName="couleur"
+                  class="w-20 h-10"
+                ></ui-input>
+                <span class="text-sm text-gray-500">Choisissez la couleur de votre marque</span>
+              </div>
+            </div>
 
-          <label class="block text-gray-700 font-medium">Avatar</label>
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onFileChange($event, 'avatar')"
-          />
+            <div class="space-y-1.5 pt-4">
+              <label class="block text-gray-800 font-semibold text-sm tracking-wide">
+                Avatar
+              </label>
+              <div class="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onFileChange($event, 'avatar')"
+                  class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 file:cursor-pointer file:transition-all file:duration-200 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 pt-6">
-          <ui-button variant="outline" [fullWidth]="true"> Annuler </ui-button>
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-5">
+          <ui-button 
+            variant="outline" 
+            [fullWidth]="true"
+            class="order-2 sm:order-1"
+          > 
+            Annuler 
+          </ui-button>
 
           <ui-button
             type="submit"
@@ -86,6 +136,7 @@
             [fullWidth]="true"
             [loading]="loading"
             [disabled]="organisationForm.invalid"
+            class="order-1 sm:order-2"
           >
             Commencer maintenant
           </ui-button>

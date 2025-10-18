@@ -351,9 +351,12 @@ export class MembresComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadMembers();
-    this.subscribeToMembers();
-    this.loadRoles();
+    // Always fetch members from backend when accessing the page
+    this.membersService.refreshMembersFromApi().subscribe(() => {
+      this.loadMembers();
+      this.subscribeToMembers();
+      this.loadRoles();
+    });
   }
 
   private loadRoles(): void {

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, Inject, ChangeDetectionStrategy, ChangeDe
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
+import { EspaceService } from '../../../../core/services/espace.service';
 import { ReservationsService, Reservation, ReservationStats } from '../../../../core/services/reservations.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ModalService } from '../../../../core/services/modal.service';
@@ -365,7 +366,20 @@ export class ReservationsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  constructor(
+    private reservationsService: ReservationsService,
+    private router: Router,
+    private toast: ToastService,
+    @Inject(ModalService) private modal: ModalService,
+    private cdr: ChangeDetectorRef,
+    private espaceService: EspaceService // Add espaceService for backend fetch
+  ) {}
+
   ngOnInit(): void {
+    // Ensure backend fetches are triggered on page access
+    this.espaceService.getAll().subscribe();
+    this.reservationsService.refreshFromApi();
+
     this.reservationsService.getReservations().pipe(takeUntil(this.destroy$)).subscribe(reservations => {
       this.allReservations = reservations;
 
@@ -422,14 +436,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return 'bg-gray-100 text-gray-800';
     }
   }
-
-  constructor(
-    private reservationsService: ReservationsService,
-    private router: Router,
-    private toast: ToastService,
-    @Inject(ModalService) private modal: ModalService,
-    private cdr: ChangeDetectorRef
-  ) {}
 
   async acceptReservation(reservation: Reservation): Promise<void> {
     const ok = await this.modal.confirm({
@@ -519,7 +525,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         if (isNaN(dateInput.getTime())) return '';
         return dateInput.toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit' });
       }
-      // if string like '2025-10-11' or ISO, Date can parse; if HH:mm, this isn't a date
       if (/^\d{1,2}:\d{2}$/.test(dateInput)) return '';
       const d = new Date(dateInput);
       if (isNaN(d.getTime())) return '';
@@ -537,7 +542,6 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         return timeOrDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       }
       const str = String(timeOrDate).trim();
-      // Support 'HH:mm' input directly
       const hhmm = str.match(/^(\d{1,2}):(\d{2})$/);
       if (hhmm) {
         const h = Math.min(23, Math.max(0, parseInt(hhmm[1], 10)));
@@ -546,13 +550,16 @@ export class ReservationsComponent implements OnInit, OnDestroy {
         d.setHours(h, m, 0, 0);
         return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       }
-      // Otherwise, parse as date string
       const d = new Date(str);
       if (isNaN(d.getTime())) return '';
       return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     } catch {
       return '';
     }
+  }
+
+  trackByReservation(_index: number, item: Reservation) {
+    return item?.id ?? _index;
   }
 
   navigateToCalendar(): void {
@@ -566,9 +573,5 @@ export class ReservationsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  trackByReservation(_index: number, item: Reservation) {
-    return item?.id ?? _index;
   }
 }

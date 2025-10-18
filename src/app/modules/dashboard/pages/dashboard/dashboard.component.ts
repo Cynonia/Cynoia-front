@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardHeaderComponent } from '../../components/dashboard-header/dashboard-header.component';
 import { AuthService } from '../../../../core/services/auth.service';
+import { EspaceService } from '../../../../core/services/espace.service';
+import { ReservationsService } from '../../../../core/services/reservations.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,9 +32,12 @@ import { AuthService } from '../../../../core/services/auth.service';
   `
 })
 export class DashboardComponent implements OnInit {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private espaceService: EspaceService, private reservationsService: ReservationsService) {}
 
   ngOnInit(): void {
+    // Always force backend fetches for dashboard load
+    this.espaceService.getAll().subscribe({ next: () => {}, error: () => {} });
+    this.reservationsService.getReservations(true).subscribe({ next: () => {}, error: () => {} });
     console.log('Dashboard loaded for:', this.authService.currentUser);
   }
 }

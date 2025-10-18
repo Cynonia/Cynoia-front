@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { EspaceService } from '../../../../core/services/espace.service';
+import { ReservationsService } from '../../../../core/services/reservations.service';
 
 @Component({
   selector: 'app-finances',
@@ -19,4 +22,12 @@ import { CommonModule } from '@angular/common';
     </div>
   `
 })
-export class FinancesComponent {}
+export class FinancesComponent implements OnInit {
+  constructor(private espaceService: EspaceService, private reservationsService: ReservationsService) {}
+
+  ngOnInit(): void {
+    // Trigger backend fetches for spaces and reservations on page access
+    this.espaceService.getAll().subscribe();
+    this.reservationsService.refreshFromApi();
+  }
+}

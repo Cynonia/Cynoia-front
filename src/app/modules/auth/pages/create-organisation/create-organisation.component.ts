@@ -10,6 +10,7 @@ import { InputComponent } from '../../../../shared/components/input/input.compon
 import { ButtonComponent } from '../../../../shared/components/button/button.component';
 import { AuthService } from '../../../../core/services';
 import { OrganisationService } from '../../../../core/services/organisation.service';
+import { BrandingService } from '../../../../core/services/branding.service';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -30,6 +31,7 @@ export class CreateOrganisationComponent {
     private fb: FormBuilder,
     private authService: AuthService,
     private organisationService: OrganisationService,
+    private brandingService: BrandingService,
     private router: Router
   ) {
     this.organisationForm = this.fb.group({
@@ -122,17 +124,29 @@ export class CreateOrganisationComponent {
           userId: currentUser.id,  // Use the snapshot userId here
         };
 
-        this.organisationService.createOrganisation(formData).subscribe({
-          next: (response) => {
-            console.log('Organisation créée ✅', response);
-            this.loading = false;
-            this.router.navigate(['']);
-          },
-          error: (err) => {
-            console.error("Erreur lors de l'envoi ❌", err);
-            this.loading = false;
-          },
-        });
+        // Create organisation and wait for response, then update branding before navigating
+        try {
+          const resp = await firstValueFrom(this.organisationService.createOrganisation(formData));
+          const org = resp?.data as any;
+          console.log('Organisation créée ✅', org);
+
+          // Update branding immediately so dashboard shows new logo/colors
+          if (org) {
+            this.brandingService.updateOrganization({
+              name: org.name,
+              logo: org.logo,
+              primaryColor: org.couleur || org.primaryColor,
+              hasCustomBranding: true
+            });
+            this.brandingService.applyCssVariables();
+          }
+
+          this.loading = false;
+          this.router.navigate(['']);
+        } catch (err) {
+          console.error("Erreur lors de l'envoi ❌", err);
+          this.loading = false;
+        }
       } catch (error) {
         console.error('Erreur de Cloudinary ou utilisateur non connecté ❌', error);
         this.loading = false;

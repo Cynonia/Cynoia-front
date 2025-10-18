@@ -294,12 +294,10 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private loadDashboardData(): void {
     this.isLoading = true;
 
-    this.stats = this.reservationsService.getReservationStats();
-
-    this.reservationsService.getReservations().subscribe({
+    // Force backend fetch for reservations
+    this.reservationsService.getReservations(true).subscribe({
       next: (reservations) => {
         this.stats = this.calculateStats(reservations);
-
         this.recentReservations = reservations
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .slice(0, 5)

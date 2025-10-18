@@ -218,8 +218,13 @@ export class EspacesDisponiblesComponent implements OnInit {
       filter((u: any) => !!u && !!u.entity?.id),
       take(1)
     ).subscribe({
-      next: (user) => {console.log(user);
-       this.loadSpacesByEntity(user!.entity.id)},
+      next: (user) => {
+        // Force backend fetch by clearing EspaceService cache
+        if (this.espaceService['allByEntityCache']) {
+          this.espaceService['allByEntityCache'].clear();
+        }
+        this.loadSpacesByEntity(user!.entity.id)
+      },
       error: () => this.toast.error("Impossible de déterminer l'entité de l'utilisateur")
     });
   }
